@@ -1,0 +1,391 @@
+import 'package:flutter/material.dart';
+import 'package:just_form/field/just_checkbox.dart';
+import 'package:just_form/field/just_checkbox_list_tile.dart';
+import 'package:just_form/field/just_drop_down_button.dart';
+import 'package:just_form/field/just_radio_group.dart';
+import 'package:just_form/field/just_range_slider.dart';
+import 'package:just_form/field/just_switch.dart';
+import 'package:just_form/field/just_switch_list_tile.dart';
+import 'package:just_form/field/just_text_field.dart';
+import 'package:just_form/field/just_slider.dart';
+import 'package:just_form/just_error.dart';
+import 'package:just_form/just_form.dart';
+import 'package:just_form/just_builder.dart';
+import 'package:just_form/validator/just_validator_required.dart';
+import 'package:just_form/just_validator.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final _controller = JustFormController(
+    initialValues: {
+      "username": "john_dzzz",
+      "password": "passwwwww",
+      "re-password": "passwwwww",
+      "check": true,
+      "name": "john zz",
+    },
+  );
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: SafeArea(
+        child: JustForm(
+          controller: _controller,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      spacing: 10,
+                      children: [
+                        JustTextField(
+                          name: "username",
+                          decoration: InputDecoration(
+                            labelText: "Username",
+                            hintText: "Input Username",
+                          ),
+                          validators: [
+                            JustValidatorRequired(message: "Username required"),
+                            JustValidator<String>(
+                              validator: (value, formValues) =>
+                                  ((value?.length) ?? 0) <= 5
+                                  ? "username value must be more than 5"
+                                  : null,
+                            ),
+                          ],
+                        ),
+                        JustTextField(
+                          name: "password",
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Password",
+                            hintText: "Input Password",
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                _controller
+                                    .field("password")
+                                    .patchAttribute<bool>(
+                                      "obscureText",
+                                      (oldValue) => !(oldValue ?? true),
+                                    );
+                              },
+                              icon: Icon(Icons.visibility, color: Colors.grey),
+                            ),
+                          ),
+                          validators: [
+                            JustValidatorRequired(message: "Password required"),
+                            JustValidator<String>(
+                              validator: (value, formValues) {
+                                return value == formValues["re-password"]
+                                    ? null
+                                    : "error";
+                              },
+                              targets: [
+                                FieldError(
+                                  field: justReservedFieldName,
+                                  message: (error) => "Password not match bro2",
+                                ),
+                                FieldError(
+                                  field: "username",
+                                  message: (error) => "Password not match bro",
+                                ),
+                                FieldError(
+                                  field: "re-password",
+                                  message: (error) => "Password not match",
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        JustTextField(
+                          name: "re-password",
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Retype Password",
+                            hintText: "Exactly match with password",
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                _controller
+                                    .field("re-password")
+                                    .patchAttribute<bool>(
+                                      "obscureText",
+                                      (oldValue) => !(oldValue ?? true),
+                                    );
+                              },
+                              icon: Icon(Icons.visibility, color: Colors.grey),
+                            ),
+                          ),
+                          validators: [
+                            JustValidator<String>(
+                              validator: (value, formValues) {
+                                return value == formValues["password"]
+                                    ? null
+                                    : "Password not match";
+                              },
+                            ),
+                          ],
+                        ),
+                        JustRadioGroup(
+                          name: "radioGroup",
+                          initialValue: "B",
+                          child: Wrap(
+                            spacing: 10,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  _controller.field("radioGroup").value = "A";
+                                },
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('Radio A'),
+                                    Radio(value: "A"),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  _controller.field("radioGroup").value = "B";
+                                },
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('Radio B'),
+                                    Radio(value: "B"),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  _controller.field("radioGroup").value = "C";
+                                },
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('Radio C'),
+                                    Radio(value: "C"),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Expanded(child: Text("Show Detail Form")),
+                            JustCheckbox(name: "check"),
+                          ],
+                        ),
+                        JustBuilder(
+                          fields: JustBuilderFields.one("check"),
+                          notifyValueUpdate: true,
+                          builder: (context, state) {
+                            return state.field('check').value == true
+                                ? Column(
+                                    spacing: 10,
+                                    children: [
+                                      JustTextField(
+                                        name: "name",
+                                        decoration: InputDecoration(
+                                          labelText: "Name",
+                                          hintText: "Input Name",
+                                        ),
+                                        validators: [
+                                          JustValidatorRequired(
+                                            message: "Name required",
+                                          ),
+                                        ],
+                                      ),
+
+                                      Row(
+                                        children: [
+                                          Expanded(child: Text("DropDown")),
+                                          JustDropDownButton(
+                                            name: "dropdown",
+                                            initialValue: "B",
+                                            selectedItemBuilder: (context) {
+                                              return [
+                                                DropdownMenuItem(
+                                                  value: "A",
+                                                  child: Text(
+                                                    "Dropdown value A Selected",
+                                                  ),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: "B",
+                                                  child: Text(
+                                                    "Dropdown value B Selected",
+                                                  ),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: "C",
+                                                  child: Text(
+                                                    "Dropdown value C Selected",
+                                                  ),
+                                                ),
+                                                DropdownMenuItem(
+                                                  value: "D",
+                                                  child: Text(
+                                                    "Dropdown value D Selected",
+                                                  ),
+                                                ),
+                                              ];
+                                            },
+                                            items: [
+                                              DropdownMenuItem(
+                                                value: "A",
+                                                child: Text("Dropdown value A"),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: "B",
+                                                child: Text("Dropdown value B"),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: "C",
+                                                child: Text("Dropdown value C"),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: "D",
+                                                child: Text("Dropdown value D"),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      JustCheckboxListTile(
+                                        name: "cklist",
+                                        title: Text("Checkbox list tile"),
+                                        tileColor: Colors.blue,
+                                      ),
+                                      JustSwitchListTile(
+                                        name: "switch-tile",
+                                        title: Text("Switch list tile"),
+                                        tileColor: Colors.blue,
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: JustSlider(
+                                              name: "slider",
+                                              initialValue: 0.46375,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            onPressed: () {
+                                              // reset value
+                                              _controller
+                                                  .field("slider")
+                                                  .value = _controller
+                                                  .field("slider")
+                                                  .initialValue;
+                                            },
+                                            icon: Icon(Icons.refresh),
+                                          ),
+                                        ],
+                                      ),
+                                      JustBuilder(
+                                        fields: JustBuilderFields.one("slider"),
+                                        notifyValueUpdate: true,
+                                        builder: (context, state) {
+                                          return Text(
+                                            "Slider Value: ${state.field("slider").value}",
+                                          );
+                                        },
+                                      ),
+                                      JustRangeSlider(name: "range-slider"),
+                                      Row(
+                                        children: [
+                                          Expanded(child: Text("Switch")),
+                                          JustSwitch(name: "switch"),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                : SizedBox.shrink();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: double.maxFinite,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // _controller.field("username").value = "haaaahaa";
+                      _controller.values = {
+                        "username": "john_doe",
+                        "password": "password",
+                        "re-password": "password",
+                        "check": true,
+                        "name": "john doe",
+                      };
+                    },
+                    child: Text("Set Value"),
+                  ),
+                ),
+                SizedBox(height: 10),
+                SizedBox(
+                  width: double.maxFinite,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _controller.validate(exitOnFirstError: false).then((
+                        value,
+                      ) {
+                        // if (value) {
+                        print(_controller.values);
+                        print(_controller.errors);
+                        // }
+                      });
+                    },
+                    child: Text("Submit"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
