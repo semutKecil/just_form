@@ -2,6 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// This class, `JustSlider`, is a stateless widget in Flutter that provides a slider for a form. Here's a summary of what each method does:
+///
+/// - `name`: The name of the field in the form. This is required for validation.
+/// - `initialValue`: The initial value of the field. This value is ignored if it's already set in the `JustFormController` or `JustForm`.
+/// - `validators`: A list of validators to check the value of the field against.
+/// - `onChanged`: A callback function that is called when the user toggles the switch on or off.
+/// - `activeColor`, `inactiveColor`, `secondaryActiveColor`, `thumbColor`: These are optional parameters that customize the appearance of the slider.
+/// - `min`, `max`: These define the range of values the user can select.
+/// - `divisions`: The number of discrete divisions. If null, the slider is continuous.
+/// - `label`: A label to show above the slider when the slider is active.
+/// - `mouseCursor`: The cursor for a mouse pointer when it enters or is hovering over the widget.
+/// - `semanticFormatterCallback`: The callback used to create a semantic value from a slider value.
+/// - `focusNode`: The focus node for the slider.
+/// - `autofocus`: Whether the slider should be focused automatically.
+/// - `allowedInteraction`: Determines the allowed way for the user to interact with the slider.
+/// - `padding`: Determines the padding around the slider.
+///
+/// The `build` method builds the widget and returns a `JustField<double>` with a `Slider` as its builder. The `Slider` widget is configured with the parameters passed to the `JustSlider` constructor and the values from the `JustField` state.
 class JustSlider extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -348,12 +366,16 @@ class JustSlider extends StatelessWidget {
       validators: validators,
       initialValue: initialValue ?? min,
       notifyInternalUpdate: true,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value ?? min);
+            },
       builder: (context, state) {
         return Slider(
           value: state.value ?? min,
           onChanged: (value) {
-            state.value = value;
-            onChanged?.call(value);
+            state.setValue(value);
           },
           onChangeEnd: (value) {
             onChangeEnd?.call(value);

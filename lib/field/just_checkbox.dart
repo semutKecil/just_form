@@ -2,6 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// The `JustCheckbox` class is a Flutter widget that represents a checkbox field in a form. It extends the `StatelessWidget` class. Here's a summary of what each field and method does:
+///
+/// - `name`: This is the name of the field in the form. It's used to identify the field in the `JustFormController` and is required for validation.
+/// - `initialValue`: This is the initial value of the field. If the initial value is already set in the `JustFormController` or `JustForm`, this value is ignored.
+/// - `validators`: This is a list of validators to check the value of the field against. These validators will be run whenever the value of the field changes.
+/// - `onChanged`: This is a callback that is called when the value of the checkbox should change. The checkbox passes the new value to the callback but does not actually change state until the parent widget rebuilds the checkbox with the new value.
+/// - `tristate`: If true, the checkbox's `value` can be true, false, or null. When a tri-state checkbox is tapped, its `onChanged` callback will be applied to true if the current value is false, to null if value is true, and to false if value is null (i.e. it cycles through false => true => null => false when tapped).
+/// - `mouseCursor`: The cursor for a mouse pointer when it enters or is hovering over the widget.
+/// - `activeColor`: The color to use when this checkbox is checked.
+/// - `checkColor`: The color to use for the check icon when this checkbox is checked.
+/// - `focusColor`: The color for the checkbox's Material when it has the input focus.
+/// - `hoverColor`: The color for the checkbox's Material when a pointer is hovering over it.
+/// - `splashRadius`: The splash radius of the circular Material ink response.
+/// - `materialTapTargetSize`: Configures the minimum size of the tap target.
+/// - `visualDensity`: Defines how compact the checkbox's layout will be.
+/// - `focusNode`: The focus node for this checkbox.
+/// - `autofocus`: Whether this checkbox should be focused when the form is first loaded.
+/// - `shape`: The shape of the checkbox's Material.
+/// - `side`: The color and width of the checkbox's border.
+/// - `isError`: True if this checkbox wants to show an error state.
+/// - `semanticLabel`: The semantic label for the checkbox that will be announced by screen readers.
+///
+/// The `build` method builds the widget and returns a `JustField<bool>` with a `Checkbox` as its builder. The `Checkbox` widget is configured with the parameters passed to the `JustCheckbox` constructor and the values from the `JustField` state.
 class JustCheckbox extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -259,15 +282,18 @@ class JustCheckbox extends StatelessWidget {
       notifyError: false,
       notifyInternalUpdate: true,
       validators: validators,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value);
+            },
       builder: (context, state) {
         return Checkbox(
           value: (state.getAttribute('tristate') ?? tristate)
               ? state.value
               : state.value ?? false,
           onChanged: (value) {
-            state.value = value;
-            // state.update(value);
-            onChanged?.call(value);
+            state.setValue(value);
           },
           tristate: state.getAttribute('tristate') ?? tristate,
           mouseCursor: state.getAttribute('mouseCursor') ?? mouseCursor,

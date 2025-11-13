@@ -7,6 +7,40 @@ import 'package:flutter/services.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// A text input field widget integrated with the just_form system.
+///
+/// [JustTextField] is a convenience widget that wraps Flutter's [TextFormField]
+/// and integrates it with the just_form form management system. It automatically
+/// handles field registration, validation, state management, and value synchronization.
+///
+/// The widget manages its own [TextEditingController] and optionally its own [FocusNode]
+/// if none are provided. It supports all the standard [TextFormField] properties while
+/// adding form-specific features like validators and automatic state tracking.
+///
+/// Key features:
+/// - Automatic form field registration via [JustField]
+/// - Integrated validation with [JustValidator]
+/// - Automatic value synchronization with form controller
+/// - Support for dynamic property overrides via field attributes
+/// - Full [TextFormField] customization options
+///
+/// Example - Basic text input:
+/// ```dart
+/// JustTextField(
+///   name: 'username',
+///   decoration: InputDecoration(
+///     labelText: 'Username',
+///     hintText: 'Enter your username',
+///   ),
+///   validators: [
+///     JustValidator(
+///       validate: (value, formValues) =>
+///         value?.isEmpty ?? true ? 'Username is required' : null,
+///     ),
+///   ],
+///   onChanged: (value) => print('User typed: $value'),
+/// )
+/// ```
 class JustTextField extends StatefulWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -501,12 +535,17 @@ class JustTextField extends StatefulWidget {
   /// {@macro flutter.services.TextInputConfiguration.hintLocales}
   final List<Locale>? hintLocales;
 
-  /// {@macro flutter.widgets.EditableText.spellCheckConfiguration}
+  /// {@macro flutter.widgets.editableText.spellCheckConfiguration}
   ///
   /// If [SpellCheckConfiguration.misspelledTextStyle] is not specified in this
   /// configuration, then [materialMisspelledTextStyle] is used by default.
   final SpellCheckConfiguration? spellCheckConfiguration;
 
+  /// Builds a default context menu for text editing (iOS uses system menu).
+  ///
+  /// This is a static helper that creates the appropriate context menu based on platform.
+  /// On iOS with system context menu support, it uses [SystemContextMenu].
+  /// Otherwise, it uses [AdaptiveTextSelectionToolbar].
   static Widget _defaultContextMenuBuilder(
     BuildContext context,
     EditableTextState editableTextState,
@@ -522,6 +561,14 @@ class JustTextField extends StatefulWidget {
     );
   }
 
+  /// Creates a [JustTextField] widget.
+  ///
+  /// Most parameters match their [TextFormField] equivalents. The [name] and
+  /// [validators] parameters are form-specific and required for integration with
+  /// the just_form system.
+  ///
+  /// The widget automatically manages a [TextEditingController] internally. You cannot
+  /// provide a custom controller, but you can access the value through the form controller.
   const JustTextField({
     super.key,
     this.initialValue,
@@ -594,14 +641,34 @@ class JustTextField extends StatefulWidget {
     this.hintLocales,
   });
 
+  /// Creates the state for this widget.
   @override
   State<JustTextField> createState() => _JustTextFieldState();
 }
 
+/// The state implementation for [JustTextField].
+///
+/// This class manages:
+/// - The text field's focus node (created internally if not provided)
+/// - The text editing controller for the input
+/// - Synchronization between the controller's value and the form state
+/// - Lifecycle management (initialization and disposal)
 class _JustTextFieldState extends State<JustTextField> {
+  /// The focus node for this text field, either provided or created internally.
   late final FocusNode _focusNode;
+
+  /// Whether this widget created its own focus node (and thus owns disposal responsibility).
   late final bool _ownFocusNode;
+
+  /// The text editing controller that manages the text input.
+  ///
+  /// Always created internally by this widget and disposed when the widget is removed.
   final TextEditingController _controller = TextEditingController();
+
+  /// Initializes the focus node.
+  ///
+  /// If the widget wasn't provided a focus node, this creates one internally
+  /// and sets [_ownFocusNode] to true so it will be disposed later.
   @override
   void initState() {
     super.initState();
@@ -614,6 +681,11 @@ class _JustTextFieldState extends State<JustTextField> {
     }
   }
 
+  /// Cleans up resources when the widget is removed.
+  ///
+  /// This method:
+  /// 1. Disposes the text editing controller
+  /// 2. Disposes the focus node if it was created internally
   @override
   void dispose() {
     _controller.dispose();
@@ -621,6 +693,19 @@ class _JustTextFieldState extends State<JustTextField> {
     super.dispose();
   }
 
+  /// Builds the text field widget integrated with the form system.
+  ///
+  /// This method wraps the text input with a [JustField] widget to integrate
+  /// with the form controller. It:
+  /// 1. Sets up value synchronization between the text controller and form state
+  /// 2. Handles validation error display
+  /// 3. Allows dynamic property overrides via field attributes
+  /// 4. Builds a [TextFormField] with all standard properties
+  ///
+  /// Dynamic properties can be changed at runtime via [controller.setAttribute()]:
+  /// ```dart
+  /// controller.setAttribute('fieldName', 'decoration', newDecoration);
+  /// ```
   @override
   Widget build(BuildContext context) {
     return JustField<String>(
@@ -638,7 +723,7 @@ class _JustTextFieldState extends State<JustTextField> {
         return TextFormField(
           controller: _controller,
           onChanged: (value) {
-            state.value = value;
+            state.setValue(value);
           },
           forceErrorText: state.error,
           groupId: widget.groupId,

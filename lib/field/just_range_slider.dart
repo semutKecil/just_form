@@ -2,6 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// The `JustRangeSlider` class is a Flutter widget that provides a range slider for a form. Here's a summary of what each method does:
+///
+/// - `name`: This is the name of the field in the form. It's used to identify the field in the `JustFormController` and is required for validation.
+/// - `initialValue`: This is the initial value of the field. If the initial value is already set in the `JustFormController` or `JustForm`, this value is ignored.
+/// - `validators`: This is a list of validators to check the value of the field against. These validators will be run whenever the value of the field changes.
+/// - `onChanged`: This is a callback that is called when the user is selecting a new value for the slider by dragging. It should update the state of the parent `StatefulWidget` using the `State.setState` method.
+/// - `onChangeStart`: This is a callback that is called when the user starts changing the values of the slider. It should be used to be notified when the user has started selecting a new value by starting a drag or with a tap.
+/// - `onChangeEnd`: This is a callback that is called when the user is done selecting new values for the slider. It differs from `onChanged` because it is only called once at the end of the interaction.
+/// - `min` and `max`: These define the range of values the user can select.
+/// - `divisions`: This defines the number of discrete divisions. If null, the slider is continuous.
+/// - `labels`: This is used to show the current discrete values of the slider.
+/// - `activeColor` and `inactiveColor`: These are used to customize the appearance of the slider.
+/// - `semanticFormatterCallback`: This is used to create a semantic value from the slider's values.
+/// - `padding`: This determines the padding around the slider.
+///
+/// The `build` method builds the widget and returns a `JustField<RangeValues>` with a `RangeSlider` as its builder. The `RangeSlider` widget is configured with the parameters passed to the `JustRangeSlider` constructor and the values from the `JustField` state.
 class JustRangeSlider extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -249,17 +265,21 @@ class JustRangeSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return JustField(
+    return JustField<RangeValues>(
       name: name,
       initialValue: initialValue,
       validators: validators,
       notifyInternalUpdate: true,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value ?? RangeValues(min, max));
+            },
       builder: (context, state) {
         return RangeSlider(
           values: state.value ?? RangeValues(min, max),
           onChanged: (value) {
-            state.value = value;
-            onChanged?.call(value);
+            state.setValue(value);
           },
           onChangeStart: state.getAttribute('onChangeStart') ?? onChangeStart,
           onChangeEnd: state.getAttribute('onChangeEnd') ?? onChangeEnd,

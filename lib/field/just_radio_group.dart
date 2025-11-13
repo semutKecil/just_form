@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// This class `JustRadioGroup<T>` is a Flutter widget that represents a radio button group in a form. It extends `StatelessWidget` and is used to create a form field with a group of radio buttons. Here's what each method does:
+///
+/// - `name`: This is the name of the field in the form. It's used to identify the field in the `JustFormController` and is required for validation.
+/// - `initialValue`: This is the initial value of the field. If the initial value is already set in the `JustFormController` or `JustForm`, this value is ignored.
+/// - `validators`: This is a list of validators to check the value of the field against. These validators will be run whenever the value of the field changes.
+/// - `onChanged`: This is a callback that is called when selection has changed. The value can be null when unselecting a `RawRadio` with `toggleable` set to true.
+/// - `child`: This is the widget that contains the radio buttons.
+/// - `build`: This method builds the widget and returns a `JustField<T>` with a `RadioGroup` as its builder. The `RadioGroup` widget is configured with the parameters passed to the `JustRadioGroup` constructor and the values from the `JustField` state.
 class JustRadioGroup<T> extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -27,6 +35,12 @@ class JustRadioGroup<T> extends StatelessWidget {
   /// marked as invalid.
   final List<JustValidator<T>> validators;
 
+  /// Called when selection has changed.
+  ///
+  /// The value can be null when unselect the [RawRadio] with
+  /// [RawRadio.toggleable] set to true.
+  final ValueChanged<T?>? onChanged;
+
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
 
@@ -36,6 +50,7 @@ class JustRadioGroup<T> extends StatelessWidget {
     required this.child,
     this.initialValue,
     this.validators = const [],
+    this.onChanged,
   });
 
   @override
@@ -45,10 +60,15 @@ class JustRadioGroup<T> extends StatelessWidget {
       validators: validators,
       initialValue: initialValue,
       notifyInternalUpdate: true,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value);
+            },
       builder: (context, state) {
         return RadioGroup(
           onChanged: (value) {
-            state.value = value;
+            state.setValue(value);
           },
           groupValue: state.value,
           child: child,

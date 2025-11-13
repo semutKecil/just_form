@@ -2,6 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// The `JustDropDownButton<T>` class is a stateless widget that represents a dropdown button in a Flutter application. It is used to display a list of items from which the user can select one. The class has the following properties:
+///
+/// - `name`: The name of the field, used to identify the field in the `JustFormController`.
+/// - `initialValue`: The initial value of the field.
+/// - `validators`: A list of validators to check the value of the field against.
+/// - `items`: The list of items the user can select.
+/// - `hint`: A placeholder widget that is displayed by the dropdown button when no value is selected.
+/// - `disabledHint`: A preferred placeholder widget that is displayed when the dropdown is disabled.
+/// - `onChanged`: A callback function that is called when the user selects an item.
+/// - `onTap`: A callback function that is called when the dropdown button is tapped.
+/// - `selectedItemBuilder`: A builder function to customize the dropdown buttons corresponding to the `DropdownMenuItem`s in `items`.
+/// - `elevation`: The z-coordinate at which to place the menu when open.
+/// - `style`: The text style to use for text in the dropdown button and the dropdown menu.
+/// - `underline`: The widget to use for drawing the drop-down button's underline.
+/// - `icon`: The widget to use for the drop-down button's icon.
+/// - `iconDisabledColor`: The color of any `Icon` descendant of `icon` if the button is disabled.
+/// - `iconEnabledColor`: The color of any `Icon` descendant of `icon` if the button is enabled.
+/// - `iconSize`: The size to use for the drop-down button's down arrow icon button.
+/// - `isDense`: A flag to reduce the button's height.
+/// - `isExpanded`: A flag to set the dropdown's inner contents to horizontally fill its parent.
+/// - `itemHeight`: The height of the menu items.
+/// - `menuWidth`: The width of the menu.
+/// - `focusColor`: The background color of the button's `Material` when it has the input focus.
+/// - `focusNode`: A `FocusNode` for the dropdown button.
+/// - `autofocus`: A flag to set the dropdown button to have focus on initialization.
+/// - `dropdownColor`: The background color of the dropdown.
+/// - `menuMaxHeight`: The maximum height of the menu.
+/// - `enableFeedback`: A flag to enable platform-specific feedback.
+/// - `alignment`: Defines how the hint or the selected item is positioned within the button.
+/// - `borderRadius`: Defines the corner radii of the menu's rounded rectangle shape.
+/// - `padding`: Padding around the visible portion of the dropdown widget.
+/// - `barrierDismissible`: A flag to determine whether tapping outside the dropdown will close it.
+///
+/// The `build` method of the class returns a `JustField<T>` widget that wraps a `DropdownButton<T>` widget. The `JustField<T>` widget is used to manage the state of the dropdown button, including the value, validation, and change notifications. The `DropdownButton<T>` widget is used to display the dropdown button and handle user interactions.
 class JustDropDownButton<T> extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -292,13 +326,17 @@ class JustDropDownButton<T> extends StatelessWidget {
       validators: validators,
       initialValue: initialValue,
       notifyInternalUpdate: true,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value);
+            },
       builder: (context, state) {
         return DropdownButton<T>(
           items: items,
           value: state.value,
           onChanged: (value) {
-            state.value = value;
-            onChanged?.call(value);
+            state.setValue(value);
           },
           hint: state.getAttribute("hint") ?? hint,
           disabledHint: state.getAttribute("disabledHint") ?? disabledHint,

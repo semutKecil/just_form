@@ -8,11 +8,11 @@ import 'package:just_form/field/just_switch.dart';
 import 'package:just_form/field/just_switch_list_tile.dart';
 import 'package:just_form/field/just_text_field.dart';
 import 'package:just_form/field/just_slider.dart';
-import 'package:just_form/just_error.dart';
+import 'package:just_form/just_field_error.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_builder.dart';
-import 'package:just_form/validator/just_validator_required.dart';
 import 'package:just_form/just_validator.dart';
+import 'package:validatorless/validatorless.dart';
 
 void main() {
   runApp(const MyApp());
@@ -85,7 +85,15 @@ class _MyHomePageState extends State<MyHomePage> {
                             hintText: "Input Username",
                           ),
                           validators: [
-                            JustValidatorRequired(message: "Username required"),
+                            JustValidator.common(
+                              Validatorless.multiple([
+                                Validatorless.required(
+                                  'The field is obligatory',
+                                ),
+                                Validatorless.min(4, 'Min lenght 4'),
+                                Validatorless.max(20, 'Max lenght 20'),
+                              ]),
+                            ),
                             JustValidator<String>(
                               validator: (value, formValues) =>
                                   ((value?.length) ?? 0) <= 5
@@ -113,7 +121,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                           validators: [
-                            JustValidatorRequired(message: "Password required"),
+                            JustValidator.common(
+                              Validatorless.required('The field is obligatory'),
+                            ),
                             JustValidator<String>(
                               validator: (value, formValues) {
                                 return value == formValues["re-password"]
@@ -121,15 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     : "error";
                               },
                               targets: [
-                                FieldError(
-                                  field: justReservedFieldName,
-                                  message: (error) => "Password not match bro2",
-                                ),
-                                FieldError(
-                                  field: "username",
-                                  message: (error) => "Password not match bro",
-                                ),
-                                FieldError(
+                                JustFieldError(
                                   field: "re-password",
                                   message: (error) => "Password not match",
                                 ),
@@ -231,12 +233,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                           hintText: "Input Name",
                                         ),
                                         validators: [
-                                          JustValidatorRequired(
-                                            message: "Name required",
+                                          JustValidator.common(
+                                            Validatorless.required(
+                                              'The field is obligatory',
+                                            ),
                                           ),
                                         ],
                                       ),
-
                                       Row(
                                         children: [
                                           Expanded(child: Text("DropDown")),

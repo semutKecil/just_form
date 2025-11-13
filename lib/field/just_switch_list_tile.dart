@@ -3,6 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// This class, `JustSwitchListTile`, is a stateless widget in Flutter that provides a switch list tile for a form. Here's a summary of what each method does:
+/// - `name`: The name of the field in the form. This is required for validation.
+/// - `initialValue`: The initial value of the field. This value is ignored if it's already set in the `JustFormController` or `JustForm`.
+/// - `validators`: A list of validators to check the value of the field against.
+/// - `onChanged`: A callback function that is called when the user toggles the switch on or off.
+/// - `activeThumbColor`, `activeTrackColor`, `inactiveThumbColor`, `inactiveTrackColor`, `activeThumbImage`, `onActiveThumbImageError`, `inactiveThumbImage`, `onInactiveThumbImageError`, `materialTapTargetSize`, `dragStartBehavior`, `mouseCursor`, `splashRadius`, `focusNode`, `onFocusChange`, `autofocus`, `tileColor`, `title`, `subtitle`, `isThreeLine`, `dense`, `contentPadding`, `secondary`, `selected`, `controlAffinity`, `shape`, `selectedTileColor`, `visualDensity`, `enableFeedback`, `hoverColor`, `internalAddSemanticForOnTap`: These are optional parameters that customize the appearance and behavior of the switch list tile.
+/// - `build(BuildContext context)`: This method builds the widget and returns a `JustField<bool>` with a `SwitchListTile` as its builder. The `SwitchListTile` widget is configured with the parameters passed to the `JustSwitchListTile` constructor and the values from the `JustField` state.
 class JustSwitchListTile extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -219,7 +226,6 @@ class JustSwitchListTile extends StatelessWidget {
     this.initialValue,
     this.validators = const [],
     this.onChanged,
-
     this.activeThumbColor,
     this.activeTrackColor,
     this.inactiveThumbColor,
@@ -254,17 +260,21 @@ class JustSwitchListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return JustField(
+    return JustField<bool>(
       name: name,
       initialValue: initialValue,
       validators: validators,
       notifyInternalUpdate: true,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value ?? false);
+            },
       builder: (context, state) {
         return SwitchListTile(
           value: state.value ?? false,
           onChanged: (value) {
-            state.value = value;
-            onChanged?.call(value);
+            state.setValue(value);
           },
           activeThumbColor:
               state.getAttribute('activeThumbColor') ?? activeThumbColor,

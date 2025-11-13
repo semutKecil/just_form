@@ -3,14 +3,46 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// A boolean toggle switch widget integrated with the just_form system.
+///
+/// [JustSwitch] is a convenience widget that wraps Flutter's [Switch] and integrates
+/// it with the just_form form management system. It automatically handles field registration,
+/// validation, state management, and value synchronization for toggle/checkbox functionality.
+///
+/// The widget supports all standard [Switch] properties while adding form-specific features
+/// like validators and automatic state tracking. It's ideal for boolean form fields such as
+/// agreement checkboxes, feature toggles, and yes/no questions.
+///
+/// Key features:
+/// - Automatic form field registration via [JustField]
+/// - Integrated validation with [JustValidator]
+/// - Automatic value synchronization with form controller
+/// - Support for dynamic property overrides via field attributes
+/// - Full [Switch] customization options
+/// - Focus and keyboard support
+///
+/// Example - Checkbox-like agreement field:
+/// ```dart
+/// JustSwitch(
+///   name: 'agreeToTerms',
+///   initialValue: false,
+///   validators: [
+///     JustValidator(
+///       validate: (value, formValues) =>
+///         value != true ? 'You must agree to the terms' : null,
+///     ),
+///   ],
+///   onChanged: (value) => print('Agreement toggled: $value'),
+/// )
+/// ```
 class JustSwitch extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
   /// This is required to validate the form.
   ///
-  /// The name of the field should be a single word (e.g. "name", "email",
-  /// "password").
+  /// The name of the field should be a single word (e.g. "agreeToTerms",
+  /// "rememberMe", "notifications").
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
@@ -190,6 +222,21 @@ class JustSwitch extends StatelessWidget {
   /// then there is no padding by default.
   final EdgeInsetsGeometry? padding;
 
+  /// Creates a [JustSwitch] widget.
+  ///
+  /// The [name] parameter is required for form integration. Most other parameters
+  /// match their [Switch] equivalents. The [validators] parameter is form-specific
+  /// and used for validation.
+  ///
+  /// Example:
+  /// ```dart
+  /// JustSwitch(
+  ///   name: 'rememberMe',
+  ///   initialValue: false,
+  ///   activeThumbColor: Colors.green,
+  ///   activeTrackColor: Colors.greenAccent,
+  /// )
+  /// ```
   const JustSwitch({
     super.key,
     required this.name,
@@ -216,19 +263,39 @@ class JustSwitch extends StatelessWidget {
     this.padding,
   });
 
+  /// Builds the switch widget integrated with the form system.
+  ///
+  /// This method wraps the switch with a [JustField] widget to integrate
+  /// with the form controller. It:
+  /// 1. Sets up value synchronization between the switch and form state
+  /// 2. Handles validation
+  /// 3. Allows dynamic property overrides via field attributes
+  /// 4. Builds a [Switch] with all standard properties
+  ///
+  /// The [notifyInternalUpdate] is set to true for switches so the UI updates
+  /// immediately when the user toggles the switch.
+  ///
+  /// Dynamic properties can be changed at runtime via [controller.setAttribute()]:
+  /// ```dart
+  /// controller.setAttribute('fieldName', 'activeThumbColor', Colors.blue);
+  /// ```
   @override
   Widget build(BuildContext context) {
-    return JustField(
+    return JustField<bool>(
       name: name,
       initialValue: initialValue,
       validators: validators,
       notifyInternalUpdate: true,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value ?? false);
+            },
       builder: (context, state) {
         return Switch(
           value: state.value ?? false,
           onChanged: (value) {
-            state.value = value;
-            onChanged?.call(value);
+            state.setValue(value);
           },
           activeThumbColor:
               state.getAttribute('activeThumbColor') ?? activeThumbColor,

@@ -2,6 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:just_form/just_form.dart';
 import 'package:just_form/just_validator.dart';
 
+/// The `JustCheckboxListTile` class is a stateless widget in Flutter that provides a checkbox list tile for a form. Here's a summary of what each method does:
+///
+/// - `name`: The name of the field in the form. This is required for validation.
+/// - `initialValue`: The initial value of the field. This value is ignored if it's already set in the `JustFormController` or `JustForm`.
+/// - `validators`: A list of validators to check the value of the field against.
+/// - `onChanged`: A callback function that is called when the checkbox value should change.
+/// - `mouseCursor`: The cursor for a mouse pointer when it enters or is hovering over the widget.
+/// - `activeColor`: The color to use when the checkbox is checked.
+/// - `checkColor`: The color to use for the check icon when the checkbox is checked.
+/// - `hoverColor`: The color to use when the checkbox is hovered.
+/// - `splashRadius`: The radius of the splash effect when the checkbox is pressed.
+/// - `materialTapTargetSize`: The size of the tap target for the checkbox.
+/// - `visualDensity`: The visual density of the checkbox.
+/// - `focusNode`: The focus node for the checkbox.
+/// - `autofocus`: Whether the checkbox should be focused automatically.
+/// - `shape`: The shape of the checkbox.
+/// - `side`: The side of the checkbox.
+/// - `isError`: Whether the checkbox is in an error state.
+/// - `tileColor`: The color of the checkbox tile.
+/// - `title`: The primary content of the checkbox tile.
+/// - `subtitle`: The additional content displayed below the title.
+/// - `isThreeLine`: Whether the checkbox tile is intended to display three lines of text.
+/// - `dense`: Whether the checkbox tile is part of a vertically dense list.
+/// - `secondary`: The widget displayed on the opposite side of the tile from the checkbox.
+/// - `selected`: Whether the checkbox tile is selected.
+/// - `controlAffinity`: The alignment of the checkbox and the title.
+/// - `contentPadding`: The padding surrounding the checkbox, title, subtitle, and secondary widget.
+/// - `tristate`: Whether the checkbox can have a true, false, or null value.
+/// - `checkboxShape`: The shape of the checkbox.
+/// - `selectedTileColor`: The background color when the checkbox tile is selected.
+/// - `onFocusChange`: The callback function called when the checkbox tile loses focus.
+/// - `enableFeedback`: Whether feedback should be enabled for the checkbox tile.
+/// - `checkboxSemanticLabel`: The semantic label for the checkbox.
+/// - `checkboxScaleFactor`: The scaling factor applied to the checkbox.
+/// - `titleAlignment`: The alignment of the title and subtitle.
+/// - `internalAddSemanticForOnTap`: Whether to add button:true to the semantics if onTap is provided. This is a temporary flag to help changing the behavior of ListTile onTap semantics.
+///
+/// The `build` method builds the widget and returns a `JustField<bool>` with a `CheckboxListTile` as its builder. The `CheckboxListTile` widget is configured with the parameters passed to the `JustCheckboxListTile` constructor and the values from the `JustField` state.
 class JustCheckboxListTile extends StatelessWidget {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
@@ -279,19 +317,23 @@ class JustCheckboxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return JustField(
+    return JustField<bool>(
       name: name,
       validators: validators,
       initialValue: initialValue,
       notifyInternalUpdate: true,
+      onChanged: onChanged == null
+          ? null
+          : (value, isInternalUpdate) {
+              onChanged?.call(value);
+            },
       builder: (context, state) {
         return CheckboxListTile(
           value: (state.getAttribute('tristate') ?? tristate)
               ? state.value
               : state.value ?? false,
           onChanged: (value) {
-            state.value = value;
-            onChanged?.call(value);
+            state.setValue(value);
           },
           mouseCursor: state.getAttribute('mouseCursor') ?? mouseCursor,
           activeColor: state.getAttribute('activeColor') ?? activeColor,
