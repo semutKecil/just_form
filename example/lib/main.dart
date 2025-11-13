@@ -69,12 +69,12 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: JustForm(
           controller: _controller,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       spacing: 10,
                       children: [
@@ -292,15 +292,19 @@ class _MyHomePageState extends State<MyHomePage> {
                                           ),
                                         ],
                                       ),
-                                      JustCheckboxListTile(
-                                        name: "cklist",
-                                        title: Text("Checkbox list tile"),
-                                        tileColor: Colors.blue,
+                                      Material(
+                                        child: JustCheckboxListTile(
+                                          name: "cklist",
+                                          title: Text("Checkbox list tile"),
+                                          tileColor: Colors.blue,
+                                        ),
                                       ),
-                                      JustSwitchListTile(
-                                        name: "switch-tile",
-                                        title: Text("Switch list tile"),
-                                        tileColor: Colors.blue,
+                                      Material(
+                                        child: JustSwitchListTile(
+                                          name: "switch-tile",
+                                          title: Text("Switch list tile"),
+                                          tileColor: Colors.blue,
+                                        ),
                                       ),
                                       Row(
                                         children: [
@@ -348,41 +352,49 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                 ),
-                SizedBox(
-                  width: double.maxFinite,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // _controller.field("username").value = "haaaahaa";
-                      _controller.values = {
-                        "username": "john_doe",
-                        "password": "password",
-                        "re-password": "password",
-                        "check": true,
-                        "name": "john doe",
-                      };
-                    },
-                    child: Text("Set Value"),
-                  ),
+              ),
+              Divider(),
+              Padding(
+                padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.maxFinite,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // _controller.field("username").value = "haaaahaa";
+                          _controller.values = {
+                            "username": "jo",
+                            "password": "pass0",
+                            "re-password": "password",
+                            "check": true,
+                            "name": "john doe",
+                          };
+                        },
+                        child: Text("Set Value"),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    SizedBox(
+                      width: double.maxFinite,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _controller.validate(exitOnFirstError: false).then((
+                            value,
+                          ) {
+                            // if (value) {
+                            print(_controller.values);
+                            print(_controller.errors);
+                            // }
+                          });
+                        },
+                        child: Text("Submit"),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 10),
-                SizedBox(
-                  width: double.maxFinite,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _controller.validate(exitOnFirstError: false).then((
-                        value,
-                      ) {
-                        // if (value) {
-                        print(_controller.values);
-                        print(_controller.errors);
-                        // }
-                      });
-                    },
-                    child: Text("Submit"),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

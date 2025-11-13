@@ -148,13 +148,11 @@ class _JustFieldInnerState<T> extends State<_JustFieldInner<T>> {
       builder: (context, state) {
         try {
           var field = state[widget.name] as JustFieldState<T>?;
-          // (state.where((element) => element.name == widget.name).first)
-          //     as JustFieldState<T>?;
 
           if (field == null) throw ();
           return widget.builder(
             context,
-            widget.controller._internalField<T>(widget.name),
+            widget.controller._field<T>(widget.name, internal: true),
           );
         } catch (e) {
           throw ("${widget.name} : Field builder error", e);

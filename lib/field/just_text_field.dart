@@ -631,20 +631,17 @@ class _JustTextFieldState extends State<JustTextField> {
       validators: widget.validators,
       focusNode: _focusNode,
       onChanged: (value, isInternalUpdate) {
+        widget.onChanged?.call(value ?? "");
         if (!isInternalUpdate) _controller.text = value ?? "";
       },
       builder: (context, state) {
-        // print("name: ${widget.name}, value: ${state.value}");
         return TextFormField(
-          //   initialValue: state.value,
           controller: _controller,
           onChanged: (value) {
             state.value = value;
-            widget.onChanged?.call(value);
           },
           forceErrorText: state.error,
           groupId: widget.groupId,
-          //   focusNode: widget.focusNode,
           focusNode: _focusNode,
           decoration: state.getAttribute('decoration') ?? widget.decoration,
           keyboardType:

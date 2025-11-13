@@ -34,7 +34,7 @@ class JustFieldUpdater<T> {
     return this;
   }
 
-  JustFieldState<T>? softUpdate() {
+  void softUpdate() {
     if (_field == null) {
       if (_updateValue) {
         if (_name == justReservedFieldName) {
@@ -42,19 +42,29 @@ class JustFieldUpdater<T> {
             "Reserved Field name. Field name cannot be $justReservedFieldName",
           );
         }
-        return JustFieldState<T>(
-          name: _name,
-          value: _value,
-          initialValue: _value,
-          mode: [JustFieldStateMode.update],
+
+        _controller._pendingPatch(
+          _name,
+          JustFieldState<T>(
+            name: _name,
+            value: _value,
+            initialValue: _value,
+            mode: [JustFieldStateMode.update],
+          ),
         );
+        // return JustFieldState<T>(
+        //   name: _name,
+        //   value: _value,
+        //   initialValue: _value,
+        //   mode: [JustFieldStateMode.update],
+        // );
       }
-      return null;
+      return;
     }
     if (_updateValue == false &&
         _updateError == false &&
         _updateAttributes == false) {
-      return null;
+      return;
     }
     List<JustFieldStateMode> mode = [];
     if (_updateValue) {
@@ -77,19 +87,33 @@ class JustFieldUpdater<T> {
       }
     }
 
-    return _field._updateField(
-      mode: mode,
-      value: _updateValue ? _value : _field.value,
-      error: _updateError ? _error : _field.error,
-      attributes: _updateAttributes
-          ? {..._field.attributes, ..._attributes}
-          : (_field.attributes),
-      touched: _updateValue || _updateError ? true : _field.touched,
-      focusNode: _field.focusNode,
+    // return _field._updateField(
+    //   mode: mode,
+    //   value: _updateValue ? _value : _field.value,
+    //   error: _updateError ? _error : _field.error,
+    //   attributes: _updateAttributes
+    //       ? {..._field.attributes, ..._attributes}
+    //       : (_field.attributes),
+    //   touched: _updateValue || _updateError ? true : _field.touched,
+    //   focusNode: _field.focusNode,
+    // );
+    _controller._pendingPatch(
+      _name,
+      _field._updateField(
+        mode: mode,
+        value: _updateValue ? _value : _field.value,
+        error: _updateError ? _error : _field.error,
+        attributes: _updateAttributes
+            ? {..._field.attributes, ..._attributes}
+            : (_field.attributes),
+        touched: _updateValue || _updateError ? true : _field.touched,
+        focusNode: _field.focusNode,
+      ),
     );
   }
 
   void update() {
-    _controller._patch(_name, softUpdate());
+    softUpdate();
+    _controller._commit();
   }
 }

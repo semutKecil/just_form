@@ -13,54 +13,34 @@ class JustFieldController<T> {
     _controller = controller;
   }
 
-  JustFieldState<T>? get field =>
+  T? getValue() => state?.value;
+  T? get value => getValue();
+
+  void setValue(T? value) {
+    updater.withValue(value, internal: internal).update();
+  }
+
+  set value(T? value) => setValue(value);
+
+  String? getError() => state?.error;
+  String? get error => getError();
+
+  setError(String? error) => updater.withError(error, force: true).update();
+  set error(String? error) => setError(error);
+
+  bool get isDirty => state?.valueEqualWith(state?.initialValue) ?? false;
+
+  bool get isValid => error == null;
+
+  JustFieldState<T>? get state =>
       _controller
               .state[name] //.where((element) => element.name == name).firstOrNull
           as JustFieldState<T>?;
 
-  T? get value => field?.value;
-
-  set value(T? value) {
-    updater.withValue(value, internal: internal).update();
-    // var fieldState = field;
-    // if (fieldState != null) {
-    //   _controller._patch(
-    //     name,
-    //     fieldState._setValue(value: value, isInternalUpdate: internal),
-    //   );
-    // } else {
-    //   if (name == justReservedFieldName) {
-    //     throw Exception(
-    //       "Reserved Field name. Field name cannot be $justReservedFieldName",
-    //     );
-    //   }
-    //   _controller._add(
-    //     name,
-    //     JustFieldState<T>(
-    //       name: name,
-    //       value: value,
-    //       initialValue: value,
-    //       mode: [JustFieldStateMode.update],
-    //     ),
-    //   );
-    // }
-
-    validate(force: false);
-  }
-
-  String? get error => field?.error;
-
-  bool get isValid => error == null;
-
-  set error(String? error) => updater.withError(error, force: true).update();
-  // _controller._patch(name, field?._setError(error: error, force: true));
-
-  bool isDirty() => field?.valueEqualWith(field?.initialValue) ?? false;
-
-  T? get initialValue => field?.initialValue;
+  T? get initialValue => state?.initialValue;
 
   Future<bool> validate({bool force = true}) async {
-    var fieldState = field;
+    var fieldState = state;
     if (fieldState == null) return true;
 
     var debouncer = _controller._fieldsDebounce[name];
@@ -75,65 +55,56 @@ class JustFieldController<T> {
             }
 
             if (isSelf) {
-              updater.withError(error, force: force).update();
-              // _controller._patch(
-              //   name,
-              //   fieldState._setError(error: error, force: force),
-              // );
+              updater.withError(error, force: force).softUpdate();
             } else {
               var target = _controller.field(name);
               var targetUpdater = JustFieldUpdater(
                 target.name,
                 _controller,
-                _controller.field(name).field,
+                _controller.field(name).state,
               );
               if (error == null) {
                 if (target.error == msgCheck) {
-                  targetUpdater.withError(null, force: force).update();
-                  // _controller._patch(
-                  //   name,
-                  //   target.field?._setError(error: null, force: force),
-                  // );
+                  targetUpdater.withError(null, force: force).softUpdate();
                 }
               } else {
-                targetUpdater.withError(error, force: force).update();
-                // _controller._patch(
-                //   name,
-                //   target.field?._setError(error: error, force: force),
-                // );
+                if (target.error == null) {
+                  targetUpdater.withError(error, force: force).softUpdate();
+                }
               }
             }
           },
         );
       });
+
       if (validDebounce) {
-        updater.withError(null).update();
+        updater.withError(null).softUpdate();
       }
+      updater.update();
       return validDebounce;
     }
     return false;
   }
 
   X? getAttribute<X>(String key) {
-    var fieldState = field;
+    var fieldState = state;
     if (fieldState?.attributes[key] == null) return null;
     return fieldState?.attributes[key] as X?;
   }
 
   void setAttribute<X>(String key, X? value) {
-    var fieldState = field;
+    var fieldState = state;
     if (fieldState == null) return;
     var hasFocus = fieldState.focusNode?.hasFocus;
     if (hasFocus == true) {
       fieldState.focusNode?.unfocus();
     }
     updater.withAttributes({key: value}).update();
-    // _controller._patch(name, fieldState._setAttribute(key: key, value: value));
   }
 
   void patchAttribute<X>(String key, X? Function(X? oldValue) patch) {
     setAttribute(key, patch(getAttribute(key)));
   }
 
-  JustFieldUpdater get updater => JustFieldUpdater(name, _controller, field);
+  JustFieldUpdater get updater => JustFieldUpdater(name, _controller, state);
 }

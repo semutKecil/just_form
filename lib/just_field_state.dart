@@ -58,17 +58,6 @@ class JustFieldState<T> {
     );
   }
 
-  JustFieldState<T> _unReg() {
-    return _updateField(
-      mode: [JustFieldStateMode.none],
-      value: value,
-      error: error,
-      attributes: attributes,
-      touched: false,
-      focusNode: null,
-    );
-  }
-
   JustFieldState<T> _clean() {
     return _updateField(
       mode: [JustFieldStateMode.none],
@@ -79,49 +68,6 @@ class JustFieldState<T> {
       focusNode: focusNode,
     );
   }
-
-  // JustFieldState<T> _setValue({T? value, bool isInternalUpdate = false}) {
-  //   return _updateField(
-  //     mode: [
-  //       isInternalUpdate
-  //           ? JustFieldStateMode.updateInternal
-  //           : JustFieldStateMode.update,
-  //     ],
-  //     value: value,
-  //     error: error,
-  //     attributes: attributes,
-  //     touched: true,
-  //     focusNode: focusNode,
-  //   );
-  // }
-
-  // JustFieldState<T> _setAttribute({required String key, dynamic value}) {
-  //   return _updateField(
-  //     mode: [JustFieldStateMode.attribute],
-  //     value: this.value,
-  //     error: error,
-  //     attributes: value != null
-  //         ? (Map.from(attributes)..[key] = value)
-  //         : (Map.from(attributes)..remove(key)),
-  //     touched: touched,
-  //     focusNode: focusNode,
-  //   );
-  // }
-
-  // JustFieldState<T>? _setError({String? error, bool force = false}) {
-  //   if (touched || force) {
-  //     return _updateField(
-  //       mode: [JustFieldStateMode.error],
-  //       value: value,
-  //       error: error,
-  //       attributes: attributes,
-  //       touched: true,
-  //       focusNode: focusNode,
-  //     );
-  //   }
-
-  //   return null;
-  // }
 
   bool _validateInner({
     required Map<String, dynamic> values,

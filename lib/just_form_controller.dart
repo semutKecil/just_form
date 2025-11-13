@@ -3,57 +3,97 @@ part of 'just_form.dart';
 const String justReservedFieldName = "_self";
 
 class JustFormController extends Cubit<Map<String, JustFieldState>> {
-  late Map<String, dynamic> _pendingValues = {};
   JustFormController({Map<String, dynamic>? initialValues}) : super({}) {
     if (initialValues != null && initialValues.isNotEmpty) {
       values = initialValues;
-      _pendingValues = values;
     }
   }
 
   final Map<String, Debouncer<bool>> _fieldsDebounce = {};
   final Set<String> _registeredFields = {};
+  Map<String, JustFieldState> _pendingValues = {};
 
-  void _update(Map<String, JustFieldState> fields) {
-    _pendingValues = fields;
-    emit(fields);
+  Map<String, dynamic> getValues() =>
+      state.map((key, value) => MapEntry(key, value.value));
+
+  Map<String, dynamic> get values {
+    return getValues();
   }
 
-  // void _transaction(Function() transaction) {
-  //   _delayEmit = true;
-  //   print("transaction start");
-  //   try {
-  //     transaction();
-  //     _delayEmit = false;
-  //     _update(Map.from(state));
-  //   } catch (e, s) {
-  //     debugPrint(e.toString());
-  //     debugPrintStack(stackTrace: s);
-  //   }
-  //   print("transaction end");
-  //   _delayEmit = false;
-  // }
-
-  void _add(String name, JustFieldState field) {
-    _update(
-      Map<String, JustFieldState>.from(state).map((key, value) {
-        return MapEntry(key, value._clean());
-      })..[name] = field,
-    );
+  void setValues(Map<String, dynamic> values, {bool withValidation = false}) {
+    for (var entry in values.entries) {
+      field(entry.key).updater.withValue(entry.value).softUpdate();
+    }
+    _commit();
+    if (withValidation) {
+      validate();
+    }
   }
 
-  void _patch(String name, JustFieldState? field) {
-    if (field == null) return;
-    _update(
-      Map<String, JustFieldState>.from(state).map((key, value) {
-        return MapEntry(key, value._clean());
-      })..[name] = field,
-    );
+  set values(Map<String, dynamic> values) {
+    setValues(values);
+  }
+
+  Future<bool> validate({exitOnFirstError = false}) async {
+    var valid = true;
+    for (var fieldState in state.values) {
+      if (!await field(fieldState.name).validate()) {
+        if (exitOnFirstError) {
+          return false;
+        }
+
+        if (valid == true) {
+          valid = false;
+        }
+      }
+    }
+    return valid;
+  }
+
+  Map<String, String?> get errors {
+    return Map.fromEntries(state.values.map((e) => MapEntry(e.name, e.error)));
+  }
+
+  bool get isValid => state.values.every((element) => element.error == null);
+
+  JustFieldController<T> field<T>(String name) => _field(name);
+
+  void _commit() {
+    var clean = Map<String, JustFieldState>.from(state).map((key, value) {
+      return MapEntry(key, value._clean());
+    });
+
+    emit({...clean, ..._pendingValues});
+    _pendingValues = Map.from(state);
+  }
+
+  void _pendingPatch(String name, JustFieldState field) {
+    if (_pendingValues.isEmpty) {
+      _pendingValues = Map.from(state);
+    }
+    _pendingValues[name] = field;
+  }
+
+  void _patch(String name, JustFieldState field) {
+    _pendingPatch(name, field);
+    _commit();
   }
 
   void _unReg(String name) {
     var fieldController = field(name);
-    fieldController.field?._unReg();
+    var fState = fieldController.state;
+    if (fState == null) return;
+    _patch(
+      name,
+      fState._updateField(
+        mode: [JustFieldStateMode.none],
+        value: fState.value,
+        error: fState.error,
+        attributes: fState.attributes,
+        touched: false,
+        focusNode: null,
+      ),
+    );
     _registeredFields.remove(name);
   }
 
@@ -75,7 +115,7 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
     }
     _registeredFields.add(name);
     var fieldController = field(name);
-    var fieldState = fieldController.field;
+    var fieldState = fieldController.state;
 
     if (!_fieldsDebounce.containsKey(name)) {
       _fieldsDebounce[name] = Debouncer(delay: Duration(milliseconds: 200));
@@ -96,7 +136,7 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
         ),
       );
     } else {
-      _add(
+      _patch(
         name,
         JustFieldState<T>(
           name: name,
@@ -111,44 +151,8 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
     }
   }
 
-  JustFieldController<T> field<T>(String name) =>
-      JustFieldController<T>(controller: this, name: name, internal: false);
-
-  JustFieldController<T> _internalField<T>(String name) =>
-      JustFieldController<T>(controller: this, name: name, internal: true);
-
-  Map<String, dynamic> get values => {
-    for (var element in state.values) element.name: element.value,
-  };
-
-  set values(Map<String, dynamic> values) {
-    for (var entry in values.entries) {
-      field(entry.key).value = entry.value;
-    }
-  }
-
-  Map<String, String?> get errors {
-    return Map.fromEntries(state.values.map((e) => MapEntry(e.name, e.error)));
-  }
-
-  bool get isValid => state.values.every((element) => element.error == null);
-
-  Future<bool> validate({exitOnFirstError = false}) async {
-    if (exitOnFirstError) {
-      for (var fieldState in state.values) {
-        if (!await field(fieldState.name).validate()) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      var error = await Future.wait(
-        state.values.map((e) async => await field(e.name).validate()),
-      );
-
-      return !error.contains(false);
-    }
-  }
+  JustFieldController<T> _field<T>(String name, {bool internal = false}) =>
+      JustFieldController<T>(controller: this, name: name, internal: internal);
 
   @override
   Future<void> close() {
