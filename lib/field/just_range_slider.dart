@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/just_form.dart';
+import 'package:just_form/just_form_builder.dart';
 import 'package:just_form/just_validator.dart';
 
 /// The `JustRangeSlider` class is a Flutter widget that provides a range slider for a form. Here's a summary of what each method does:

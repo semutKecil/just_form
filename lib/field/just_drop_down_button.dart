@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/just_form.dart';
+import 'package:just_form/just_form_builder.dart';
 import 'package:just_form/just_validator.dart';
 
 /// The `JustDropDownButton<T>` class is a stateless widget that represents a dropdown button in a Flutter application. It is used to display a list of items from which the user can select one. The class has the following properties:

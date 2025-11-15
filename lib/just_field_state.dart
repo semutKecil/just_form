@@ -1,4 +1,4 @@
-part of 'just_form.dart';
+part of 'just_form_builder.dart';
 
 /// An enumeration of the different state modes that a field can be in.
 ///
@@ -74,8 +74,10 @@ class JustFieldState<T> {
   /// Allows programmatic control and monitoring of focus state.
   final FocusNode? focusNode;
 
+  final bool hasField;
+
   /// Creates a new [JustFieldState] instance.
-  const JustFieldState({
+  JustFieldState({
     required this.name,
     required this.mode,
     this.validators = const [],
@@ -86,7 +88,10 @@ class JustFieldState<T> {
     this.attributes = const {},
     this.touched = false,
     this.focusNode,
-  });
+    required this.hasField,
+  }) {
+    if (mode.isEmpty) throw ("Field state must have at least one mode");
+  }
 
   /// Whether the field's current value differs from its initial value.
   ///
@@ -123,6 +128,7 @@ class JustFieldState<T> {
     required Map<String, dynamic> attributes,
     required bool touched,
     required FocusNode? focusNode,
+    required bool hasFiled,
   }) {
     return JustFieldState<T>(
       name: name,
@@ -135,6 +141,7 @@ class JustFieldState<T> {
       attributes: attributes,
       touched: touched,
       focusNode: focusNode,
+      hasField: hasFiled,
     );
   }
 
@@ -151,6 +158,7 @@ class JustFieldState<T> {
       attributes: attributes,
       touched: touched,
       focusNode: focusNode,
+      hasFiled: hasField,
     );
   }
 

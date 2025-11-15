@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:just_form/just_form.dart';
+import 'package:just_form/just_form_builder.dart';
 import 'package:just_form/just_validator.dart';
 
 /// A boolean toggle switch widget integrated with the just_form system.

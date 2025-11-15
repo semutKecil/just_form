@@ -1,4 +1,4 @@
-part of 'just_form.dart';
+part of 'just_form_builder.dart';
 
 const String justReservedFieldName = "_self";
 
@@ -31,7 +31,18 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
 
   final Map<String, Debouncer<bool>> _fieldsDebounce = {};
   final Set<String> _registeredFields = {};
+
+  DateTime _softUpdated = DateTime.now();
+  DateTime _commited = DateTime.now();
+
   Map<String, JustFieldState> _pendingValues = {};
+
+  Map<String, JustFieldState> _getPendingValues() => _pendingValues;
+  void _patchPendingValues(Map<String, JustFieldState> patch) {
+    _softUpdated = DateTime.now();
+    print("update here");
+    _pendingValues = {..._pendingValues, ...patch};
+  }
 
   /// Returns a map of field names to their current values.
   ///
@@ -58,7 +69,8 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
     for (var entry in values.entries) {
       field(entry.key).updater.withValue(entry.value).softUpdate();
     }
-    _commit();
+    // print(_pendingValues);
+    _commit("set values");
     if (withValidation) {
       validate();
     }
@@ -74,10 +86,10 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
   /// If [exitOnFirstError] is true, then this function will return false
   /// as soon as it encounters a field with an error. Otherwise, it will
   /// return false only if all the fields have errors.
-  Future<bool> validate({exitOnFirstError = false}) async {
+  Future<bool> validate({bool exitOnFirstError = false}) async {
     var valid = true;
     for (var fieldState in state.values) {
-      if (!await field(fieldState.name).validate()) {
+      if (!await field(fieldState.name).validate(noDebounce: true)) {
         if (exitOnFirstError) {
           return false;
         }
@@ -96,7 +108,10 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
   /// Map&lt;String, String?&gt; errors = form.getErrors();
   /// print(errors); // prints {field1: null, field2: 'error message'}
   Map<String, String?> getErrors() {
-    return Map.fromEntries(state.values.map((e) => MapEntry(e.name, e.error)));
+    return Map.fromEntries(state.values.map((e) => MapEntry(e.name, e.error)))
+      ..removeWhere((key, value) {
+        return value == null;
+      });
   }
 
   /// alias for [getErrors]
@@ -111,6 +126,10 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
   /// of the field, set the value of the field, and validate the field.
   JustFieldController<T> field<T>(String name) => _field(name);
 
+  List<JustFieldController> getFields() =>
+      state.values.map((e) => _field(e.name)).toList();
+  List<JustFieldController> get fields => getFields();
+
   /// Commits the current pending values to the state and clears the pending values map.
   /// This function is used internally by the [JustFormController] to commit the
   /// current state of the form to the [JustFormController.state] after a
@@ -118,23 +137,40 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
   /// This function is not intended to be used directly by the user of the
   /// [JustFormController]. It is used internally by the [JustFormController] to
   /// manage the state of the form.
-  void _commit() {
+  void _commit(String target) {
     var clean = Map<String, JustFieldState>.from(state).map((key, value) {
       return MapEntry(key, value._clean());
     });
 
-    emit({...clean, ..._pendingValues});
-    _pendingValues = Map.from(state);
+    if (_softUpdated.isBefore(_commited)) {
+      // debugPrint("skip commit. no change");
+      return;
+    }
+
+    debugPrint("target commit $target");
+    emit({...clean, ..._getPendingValues()});
+    _commited = DateTime.now();
+
+    debugPrint(
+      "emit ${_getPendingValues().map((key, value) => MapEntry(key, value.mode))..removeWhere((key, value) => value.contains(JustFieldStateMode.none) && value.length == 1)}",
+    );
+
+    _pendingValues = Map<String, JustFieldState>.from(state).map((key, value) {
+      return MapEntry(key, value._clean());
+    });
   }
 
   /// Patches the given field into the [_pendingValues] map.
   /// If the [_pendingValues] map is empty, then it is initialized with a copy of the current state.
   /// This function is used internally by the [JustFormController] to manage the pending values of the form.
   void _pendingPatch(String name, JustFieldState field) {
-    if (_pendingValues.isEmpty) {
-      _pendingValues = Map.from(state);
+    if (_getPendingValues().isEmpty) {
+      _patchPendingValues(Map.from(state));
+      // _pendingValues = Map.from(state);
     }
-    _pendingValues[name] = field;
+    // print("pending $name  , ${field.mode}");
+    // _pendingValues[name] = field;
+    _patchPendingValues({name: field});
   }
 
   /// Patches the given field into the [_pendingValues] map and then commits the pending values to the state.
@@ -143,7 +179,7 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
   /// It is not intended to be
   void _patch(String name, JustFieldState field) {
     _pendingPatch(name, field);
-    _commit();
+    _commit("patch");
   }
 
   /// Unregisters the given field from the form controller and removes all its associated data from the state and the pending values map.
@@ -158,10 +194,11 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
       fState._updateField(
         mode: [JustFieldStateMode.none],
         value: fState.value,
-        error: fState.error,
+        error: null,
         attributes: fState.attributes,
         touched: false,
         focusNode: null,
+        hasFiled: false,
       ),
     );
     _registeredFields.remove(name);
@@ -206,13 +243,16 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
         name,
         JustFieldState<T>(
           name: name,
-          mode: [JustFieldStateMode.update],
+          mode: fieldState.value == null
+              ? [JustFieldStateMode.none]
+              : [JustFieldStateMode.update],
           initialValue: fieldState.initialValue as T?,
           validators: validators,
           isEqual: isEqual,
           attributes: fieldState.attributes,
           value: fieldState.value as T?,
           focusNode: focusnode,
+          hasField: true,
         ),
       );
     } else {
@@ -222,10 +262,13 @@ class JustFormController extends Cubit<Map<String, JustFieldState>> {
           name: name,
           validators: validators,
           isEqual: isEqual,
-          mode: [JustFieldStateMode.update],
+          mode: initialValue == null
+              ? [JustFieldStateMode.none]
+              : [JustFieldStateMode.update],
           value: initialValue,
           initialValue: initialValue,
           focusNode: focusnode,
+          hasField: true,
         ),
       );
     }

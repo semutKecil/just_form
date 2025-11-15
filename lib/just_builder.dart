@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:just_form/just_form.dart';
+import 'package:just_form/just_form_builder.dart';
 
 /// Specifies which form fields should trigger rebuilds of a [JustBuilder] widget.
 ///
@@ -194,7 +194,7 @@ class JustBuilder extends StatelessWidget {
         return false;
       },
       builder: (context, state) {
-        return builder(context, context.read<JustFormController>());
+        return builder(context, context.justForm);
       },
     );
   }

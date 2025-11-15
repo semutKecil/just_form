@@ -9,8 +9,9 @@ import 'package:just_form/field/just_switch_list_tile.dart';
 import 'package:just_form/field/just_text_field.dart';
 import 'package:just_form/field/just_slider.dart';
 import 'package:just_form/just_field_error.dart';
-import 'package:just_form/just_form.dart';
+import 'package:just_form/just_form_builder.dart';
 import 'package:just_form/just_builder.dart';
+import 'package:just_form/just_nested_builder.dart';
 import 'package:just_form/just_validator.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -34,42 +35,29 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final _controller = JustFormController(
-    initialValues: {
-      "username": "john_dzzz",
-      "password": "passwwwww",
-      "re-password": "passwwwww",
-      "check": true,
-      "name": "john zz",
-    },
-  );
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+  // final _controller = JustFormController(
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text(title),
       ),
       body: SafeArea(
-        child: JustForm(
-          controller: _controller,
-          child: Column(
+        child: JustFormBuilder(
+          initialValues: {
+            "username": "john_dzzz",
+            "password": "passwwwww",
+            "re-password": "passwwwww",
+            "check": true,
+            "name": "john zz",
+          },
+          builder: (context) => Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
@@ -110,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             hintText: "Input Password",
                             suffixIcon: IconButton(
                               onPressed: () {
-                                _controller
+                                context.justForm
                                     .field("password")
                                     .patchAttribute<bool>(
                                       "obscureText",
@@ -147,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             hintText: "Exactly match with password",
                             suffixIcon: IconButton(
                               onPressed: () {
-                                _controller
+                                context.justForm
                                     .field("re-password")
                                     .patchAttribute<bool>(
                                       "obscureText",
@@ -167,6 +155,54 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ],
                         ),
+                        // JustNestedBuilder(
+                        //   name: "sub-form",
+                        //   builder: (context) {
+                        //     return Column(
+                        //       children: [
+                        //         JustTextField(
+                        //           name: "sub-desc",
+                        //           validators: [
+                        //             JustValidator.common(
+                        //               Validatorless.required(
+                        //                 'The field is obligatory',
+                        //               ),
+                        //             ),
+                        //           ],
+                        //         ),
+                        //         JustTextField(
+                        //           name: "sub-desc2",
+                        //           validators: [
+                        //             JustValidator.common(
+                        //               Validatorless.required(
+                        //                 'The field is obligatory',
+                        //               ),
+                        //             ),
+                        //           ],
+                        //         ),
+                        //         JustNestedBuilder(
+                        //           name: "sub-sub-1",
+                        //           builder: (context) {
+                        //             return Column(
+                        //               children: [
+                        //                 JustTextField(
+                        //                   name: "sub-sub-1-desc",
+                        //                   validators: [
+                        //                     JustValidator.common(
+                        //                       Validatorless.required(
+                        //                         'The field is obligatory',
+                        //                       ),
+                        //                     ),
+                        //                   ],
+                        //                 ),
+                        //               ],
+                        //             );
+                        //           },
+                        //         ),
+                        //       ],
+                        //     );
+                        //   },
+                        // ),
                         JustRadioGroup(
                           name: "radioGroup",
                           initialValue: "B",
@@ -175,7 +211,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             children: [
                               GestureDetector(
                                 onTap: () {
-                                  _controller.field("radioGroup").value = "A";
+                                  context.justForm.field("radioGroup").value =
+                                      "A";
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -187,7 +224,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  _controller.field("radioGroup").value = "B";
+                                  context.justForm.field("radioGroup").value =
+                                      "B";
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -199,7 +237,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  _controller.field("radioGroup").value = "C";
+                                  context.justForm.field("radioGroup").value =
+                                      "C";
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -320,9 +359,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                           IconButton(
                                             onPressed: () {
                                               // reset value
-                                              _controller
+                                              context.justForm
                                                   .field("slider")
-                                                  .value = _controller
+                                                  .value = context.justForm
                                                   .field("slider")
                                                   .initialValue;
                                             },
@@ -366,12 +405,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: ElevatedButton(
                         onPressed: () {
                           // _controller.field("username").value = "haaaahaa";
-                          _controller.values = {
+                          context.justForm.values = {
                             "username": "jo",
                             "password": "pass0",
                             "re-password": "password",
                             "check": true,
                             "name": "john doe",
+                            "switch-tile": true,
                           };
                         },
                         child: Text("Set Value"),
@@ -382,14 +422,15 @@ class _MyHomePageState extends State<MyHomePage> {
                       width: double.maxFinite,
                       child: ElevatedButton(
                         onPressed: () {
-                          _controller.validate(exitOnFirstError: false).then((
-                            value,
-                          ) {
-                            // if (value) {
-                            print(_controller.values);
-                            print(_controller.errors);
-                            // }
-                          });
+                          context.justForm
+                              .validate(exitOnFirstError: false)
+                              .then((value) {
+                                if (context.mounted) {
+                                  // print("Form Validated");
+                                  debugPrint("${context.justForm.values}");
+                                  debugPrint("${context.justForm.errors}");
+                                }
+                              });
                         },
                         child: Text("Submit"),
                       ),

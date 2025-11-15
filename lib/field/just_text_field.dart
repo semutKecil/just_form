@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:just_form/just_form.dart';
+import 'package:just_form/just_form_builder.dart';
 import 'package:just_form/just_validator.dart';
 
 /// A text input field widget integrated with the just_form system.
@@ -679,6 +679,7 @@ class _JustTextFieldState extends State<JustTextField> {
       _focusNode = widget.focusNode!;
       _ownFocusNode = false;
     }
+    _controller.text = context.justForm.field(widget.name).value ?? '';
   }
 
   /// Cleans up resources when the widget is removed.
@@ -717,7 +718,9 @@ class _JustTextFieldState extends State<JustTextField> {
       focusNode: _focusNode,
       onChanged: (value, isInternalUpdate) {
         widget.onChanged?.call(value ?? "");
-        if (!isInternalUpdate) _controller.text = value ?? "";
+        if (!isInternalUpdate) {
+          _controller.text = value ?? "";
+        }
       },
       builder: (context, state) {
         return TextFormField(

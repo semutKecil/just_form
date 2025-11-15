@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/just_form.dart';
+import 'package:just_form/just_form_builder.dart';
 import 'package:just_form/just_validator.dart';
 
 /// This class, `JustSlider`, is a stateless widget in Flutter that provides a slider for a form. Here's a summary of what each method does:

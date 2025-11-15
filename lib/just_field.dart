@@ -1,4 +1,4 @@
-part of 'just_form.dart';
+part of 'just_form_builder.dart';
 
 /// A generic form field widget that represents a single field in a [JustForm].
 ///
@@ -116,7 +116,7 @@ class JustField<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return _JustFieldInner<T>(
       name: name,
-      controller: context.read<JustFormController>(),
+      // controller: context.justForm,
       builder: builder,
       initialValue: initialValue,
       notifyError: notifyError,
@@ -138,7 +138,7 @@ class JustField<T> extends StatelessWidget {
 /// - Building the field using the provided builder
 /// - Disposing of resources when the field is removed
 class _JustFieldInner<T> extends StatefulWidget {
-  final JustFormController controller;
+  // final JustFormController controller;
   final String name;
   final T? initialValue;
   final Widget Function(BuildContext context, JustFieldController<T> state)
@@ -151,7 +151,7 @@ class _JustFieldInner<T> extends StatefulWidget {
   final FocusNode? focusNode;
   const _JustFieldInner({
     super.key,
-    required this.controller,
+    // required this.controller,
     required this.name,
     required this.builder,
     this.initialValue,
@@ -179,6 +179,14 @@ class _JustFieldInnerState<T> extends State<_JustFieldInner<T>> {
   /// A subscription to the form controller's field changes stream.
   StreamSubscription? _sub;
 
+  /// The form controller that this field belongs to.
+  ///
+  /// This controller is used to register the field with validators and initial value,
+  /// and to listen for field changes from the form controller.
+  ///
+  /// It is initialized in the [initState] method.
+  late final JustFormController _controller;
+
   /// Initializes the field controller and sets up event listeners.
   ///
   /// This method:
@@ -190,19 +198,22 @@ class _JustFieldInnerState<T> extends State<_JustFieldInner<T>> {
   @override
   void initState() {
     super.initState();
+    _controller = context.justForm;
     if (widget.onChanged != null) {
-      _sub = widget.controller.stream.listen((event) {
-        var field = event[widget.name];
+      _sub = _controller.stream.listen((event) {
+        var field = _controller.state[widget.name];
         if (field == null) return;
         if (field.mode.contains(JustFieldStateMode.update)) {
+          // print("field: ${field.name}, ${field.mode}, ${field.value}");
           widget.onChanged?.call(field.value, false);
         } else if (field.mode.contains(JustFieldStateMode.updateInternal)) {
+          // print("field: ${field.name}, ${field.mode}, ${field.value}");
           widget.onChanged?.call(field.value, true);
         }
       });
     }
 
-    widget.controller._registerField<T>(
+    _controller._registerField<T>(
       widget.name,
       widget.initialValue,
       widget.validators,
@@ -219,7 +230,7 @@ class _JustFieldInnerState<T> extends State<_JustFieldInner<T>> {
   @override
   void dispose() {
     _sub?.cancel();
-    widget.controller._unReg(widget.name);
+    _controller._unReg(widget.name);
     super.dispose();
   }
 
@@ -283,7 +294,7 @@ class _JustFieldInnerState<T> extends State<_JustFieldInner<T>> {
           if (field == null) throw ();
           return widget.builder(
             context,
-            widget.controller._field<T>(widget.name, internal: true),
+            context.justForm._field<T>(widget.name, internal: true),
           );
         } catch (e) {
           throw ("${widget.name} : Field builder error", e);

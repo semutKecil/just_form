@@ -59,7 +59,7 @@ class Debouncer<T> {
   /// This ensures that rapid successive calls will only execute the action once,
   /// after the delay period has passed since the last call.
   ///
-  /// The action can be synchronous or asynchronous (returns FutureOr<T>).
+  /// The action can be synchronous or asynchronous (returns FutureOr&lt;T&gt;).
   /// The returned Future completes when the action finishes executing.
   ///
   /// Returns a [Future] that completes with the action's result (of type T),

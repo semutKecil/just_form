@@ -1,4 +1,4 @@
-part of 'just_form.dart';
+part of 'just_form_builder.dart';
 
 /// This `JustFieldUpdater` class is used to update the state of a field in a form. Here's a summary of what each method does:
 /// - `JustFieldUpdater.withValue`: Updates the value of the field with the given value. If `internal` is true, the parent form will not be notified about the change.
@@ -72,6 +72,7 @@ class JustFieldUpdater<T> {
             value: _value,
             initialValue: _value,
             mode: [JustFieldStateMode.update],
+            hasField: false,
           ),
         );
       }
@@ -91,7 +92,9 @@ class JustFieldUpdater<T> {
       }
     }
 
-    if (_updateError && (_field.touched == true || _forceError)) {
+    if (_updateError &&
+        (_field.touched == true || _forceError) &&
+        _error != _field.error) {
       mode.add(JustFieldStateMode.error);
     }
 
@@ -103,6 +106,7 @@ class JustFieldUpdater<T> {
       }
     }
 
+    if (mode.isEmpty) return;
     _controller._pendingPatch(
       _name,
       _field._updateField(
@@ -114,6 +118,7 @@ class JustFieldUpdater<T> {
             : (_field.attributes),
         touched: _updateValue || _updateError ? true : _field.touched,
         focusNode: _field.focusNode,
+        hasFiled: true,
       ),
     );
   }
@@ -131,6 +136,6 @@ class JustFieldUpdater<T> {
   /// It is used internally by the [JustFormController] to manage the state of the form.
   void update() {
     softUpdate();
-    _controller._commit();
+    _controller._commit("updater");
   }
 }

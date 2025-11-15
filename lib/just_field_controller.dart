@@ -1,4 +1,4 @@
-part of 'just_form.dart';
+part of 'just_form_builder.dart';
 
 /// The `JustFieldController` class is a state management controller for a field in a form.
 /// - `JustFieldController` is a constructor that initializes the `name`, `internal`, and `_controller` fields.
@@ -91,13 +91,16 @@ class JustFieldController<T> {
   /// If the field has not been registered yet, it returns true.
   /// If the validation result is true, then the error of the field will be set to null.
   /// If the validation result is false, then the error of the field will be set to the error returned by the validator.
-  Future<bool> validate({bool force = true}) async {
+  Future<bool> validate({bool force = true, noDebounce = false}) async {
     var fieldState = state;
-    if (fieldState == null) return true;
-
+    if (fieldState == null ||
+        !fieldState.hasField ||
+        fieldState.validators.isNotEmpty) {
+      return true;
+    }
     var debouncer = _controller._fieldsDebounce[name];
     if (debouncer != null) {
-      var validDebounce = await debouncer.run(() async {
+      bool doValidate() {
         return fieldState._validateInner(
           values: _controller.values,
           onFieldError: (name, error, isSelf, msgCheck) {
@@ -105,7 +108,6 @@ class JustFieldController<T> {
               name = this.name;
               isSelf = true;
             }
-
             if (isSelf) {
               updater.withError(error, force: force).softUpdate();
             } else {
@@ -127,11 +129,21 @@ class JustFieldController<T> {
             }
           },
         );
-      });
+      }
+
+      // print("bounce");
+
+      var validDebounce = noDebounce
+          ? doValidate()
+          : await debouncer.run(() async {
+              return doValidate();
+            });
 
       if (validDebounce) {
+        print("whis");
         updater.withError(null).softUpdate();
       }
+      // print("here");
       updater.update();
       return validDebounce;
     }
