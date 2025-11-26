@@ -121,6 +121,8 @@ class Debouncer<T> {
   /// ```
   void cancel() {
     _timer?.cancel();
-    _completer?.completeError('Debounce cancelled');
+    if (!(_completer?.isCompleted == true)) {
+      _completer?.completeError('Debounce cancelled');
+    }
   }
 }

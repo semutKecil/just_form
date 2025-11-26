@@ -64,7 +64,7 @@ class JustTextField extends StatefulWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<String>> validators;
+  final List<FormFieldValidator<String>> validators;
 
   /// The configuration for the magnifier of this text field.
   ///
@@ -262,6 +262,8 @@ class JustTextField extends StatefulWidget {
   ///  * [onEditingComplete], [onSubmitted]:
   ///    which are more specialized input change notifications.
   final ValueChanged<String>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// {@macro flutter.widgets.editableText.onEditingComplete}
   final VoidCallback? onEditingComplete;
@@ -573,6 +575,7 @@ class JustTextField extends StatefulWidget {
     super.key,
     this.initialValue,
     required this.name,
+    this.saveValueOnDestroy = true,
     this.validators = const [],
     this.groupId = EditableText,
     this.focusNode,
@@ -679,7 +682,9 @@ class _JustTextFieldState extends State<JustTextField> {
       _focusNode = widget.focusNode!;
       _ownFocusNode = false;
     }
-    _controller.text = context.justForm.field(widget.name).value ?? '';
+    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+
+    // });
   }
 
   /// Cleans up resources when the widget is removed.
@@ -716,11 +721,15 @@ class _JustTextFieldState extends State<JustTextField> {
       notifyInternalUpdate: false,
       validators: widget.validators,
       focusNode: _focusNode,
+      saveValueOnDestroy: widget.saveValueOnDestroy,
       onChanged: (value, isInternalUpdate) {
         widget.onChanged?.call(value ?? "");
         if (!isInternalUpdate) {
           _controller.text = value ?? "";
         }
+      },
+      onInitialized: () {
+        _controller.text = context.justForm.field(widget.name)?.value ?? '';
       },
       builder: (context, state) {
         return TextFormField(

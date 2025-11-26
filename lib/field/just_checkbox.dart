@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
 
 /// The `JustCheckbox` class is a Flutter widget that represents a checkbox field in a form. It extends the `StatelessWidget` class. Here's a summary of what each field and method does:
 ///
@@ -48,7 +47,7 @@ class JustCheckbox extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<bool>> validators;
+  final List<FormFieldValidator<bool>> validators;
 
   /// Called when the value of the checkbox should change.
   ///
@@ -78,6 +77,8 @@ class JustCheckbox extends StatelessWidget {
   /// )
   /// ```
   final ValueChanged<bool?>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// {@template flutter.material.checkbox.mouseCursor}
   /// The cursor for a mouse pointer when it enters or is hovering over the
@@ -247,9 +248,7 @@ class JustCheckbox extends StatelessWidget {
   final String? semanticLabel;
 
   /// The width of a checkbox widget.
-  static const double width = 18.0;
-
-  // final _CheckboxType _checkboxType;
+  static const double width = 18.0; // final _CheckboxType _checkboxType;
 
   const JustCheckbox({
     super.key,
@@ -257,6 +256,7 @@ class JustCheckbox extends StatelessWidget {
     this.validators = const [],
     required this.name,
     this.onChanged,
+    this.saveValueOnDestroy = true,
     this.tristate = false,
     this.mouseCursor,
     this.activeColor,
@@ -278,10 +278,11 @@ class JustCheckbox extends StatelessWidget {
   Widget build(BuildContext context) {
     return JustField<bool>(
       name: name,
-      initialValue: initialValue,
+      initialValue: tristate ? initialValue : initialValue ?? false,
       notifyError: false,
       notifyInternalUpdate: true,
       validators: validators,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {

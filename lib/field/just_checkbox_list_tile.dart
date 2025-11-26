@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
 
 /// The `JustCheckboxListTile` class is a stateless widget in Flutter that provides a checkbox list tile for a form. Here's a summary of what each method does:
 ///
@@ -63,7 +62,7 @@ class JustCheckboxListTile extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<bool>> validators;
+  final List<FormFieldValidator<bool>> validators;
 
   /// Called when the value of the checkbox should change.
   ///
@@ -92,6 +91,8 @@ class JustCheckboxListTile extends StatelessWidget {
   /// ```
   /// {@end-tool}
   final ValueChanged<bool?>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// The cursor for a mouse pointer when it enters or is hovering over the
   /// widget.
@@ -282,6 +283,7 @@ class JustCheckboxListTile extends StatelessWidget {
     this.initialValue,
     this.validators = const [],
     this.onChanged,
+    this.saveValueOnDestroy = true,
     this.mouseCursor,
     this.activeColor,
     this.checkColor,
@@ -320,8 +322,9 @@ class JustCheckboxListTile extends StatelessWidget {
     return JustField<bool>(
       name: name,
       validators: validators,
-      initialValue: initialValue,
+      initialValue: tristate ? initialValue : initialValue ?? false,
       notifyInternalUpdate: true,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {

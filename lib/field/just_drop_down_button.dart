@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
 
 /// The `JustDropDownButton<T>` class is a stateless widget that represents a dropdown button in a Flutter application. It is used to display a list of items from which the user can select one. The class has the following properties:
 ///
@@ -59,7 +58,7 @@ class JustDropDownButton<T> extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<T>> validators;
+  final List<FormFieldValidator<T>> validators;
 
   /// The list of items the user can select.
   ///
@@ -94,6 +93,8 @@ class JustDropDownButton<T> extends StatelessWidget {
   /// non-null, [DropdownButton.hint] will instead be displayed.
   /// {@endtemplate}
   final ValueChanged<T?>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// Called when the dropdown button is tapped.
   ///
@@ -280,16 +281,12 @@ class JustDropDownButton<T> extends StatelessWidget {
   /// Defaults to `true`.
   final bool barrierDismissible;
 
-  // final InputDecoration? _inputDecoration;
-
-  // final bool _isEmpty;
-
   const JustDropDownButton({
     super.key,
     required this.name,
     this.initialValue,
     this.validators = const [],
-
+    this.saveValueOnDestroy = true,
     required this.items,
     this.selectedItemBuilder,
     this.hint,
@@ -326,6 +323,7 @@ class JustDropDownButton<T> extends StatelessWidget {
       validators: validators,
       initialValue: initialValue,
       notifyInternalUpdate: true,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {

@@ -58,7 +58,7 @@ class JustSwitch extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<bool>> validators;
+  final List<FormFieldValidator<bool>> validators;
 
   /// Called when the user toggles the switch on or off.
   ///
@@ -83,6 +83,8 @@ class JustSwitch extends StatelessWidget {
   /// )
   /// ```
   final ValueChanged<bool>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// {@template flutter.material.switch.activeThumbColor}
   /// The color to use when this switch is on.
@@ -241,6 +243,7 @@ class JustSwitch extends StatelessWidget {
     super.key,
     required this.name,
     this.initialValue,
+    this.saveValueOnDestroy = true,
     this.validators = const [],
     this.onChanged,
     this.activeThumbColor,
@@ -283,9 +286,10 @@ class JustSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     return JustField<bool>(
       name: name,
-      initialValue: initialValue,
+      initialValue: initialValue ?? false,
       validators: validators,
       notifyInternalUpdate: true,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {

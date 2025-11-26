@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
 
 /// The `JustRangeSlider` class is a Flutter widget that provides a range slider for a form. Here's a summary of what each method does:
 ///
@@ -41,7 +40,7 @@ class JustRangeSlider extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<RangeValues>> validators;
+  final List<FormFieldValidator<RangeValues>> validators;
 
   /// Called when the user is selecting a new value for the slider by dragging.
   ///
@@ -77,6 +76,8 @@ class JustRangeSlider extends StatelessWidget {
   ///    values.
   ///  * [onChangeEnd], which is called when the user stops changing the values.
   final ValueChanged<RangeValues>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// Called when the user starts selecting new values for the slider.
   ///
@@ -249,6 +250,7 @@ class JustRangeSlider extends StatelessWidget {
     super.key,
     required this.name,
     this.initialValue,
+    this.saveValueOnDestroy = true,
     this.validators = const [],
     this.onChanged,
     this.onChangeStart,
@@ -270,6 +272,7 @@ class JustRangeSlider extends StatelessWidget {
       initialValue: initialValue,
       validators: validators,
       notifyInternalUpdate: true,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {

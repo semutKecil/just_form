@@ -1,187 +1,203 @@
 part of 'just_form_builder.dart';
 
-/// The `JustFieldController` class is a state management controller for a field in a form.
-/// - `JustFieldController` is a constructor that initializes the `name`, `internal`, and `_controller` fields.
-/// - `getValue` and `value` getters return the current value of the field.
-/// - `setValue` and `value` setter update the value of the field.
-/// - `getError` and `error` getters return the current error of the field.
-/// - `setError` and `error` setter set the error of the field.
-/// - `isDirty` getter checks if the field's value has changed from its initial value.
-/// - `isValid` getter checks if the field's error is null, indicating it's valid.
-/// - `state` getter returns the current state of the field.
-/// - `initialValue` getter returns the initial value of the field.
-/// - `validate` method validates the field and returns a `Future<bool>` indicating if it's valid or not.
-/// - `getAttribute` getter returns the value of a specific attribute of the field.
-/// - `setAttribute` method sets the value of a specific attribute of the field.
-/// - `patchAttribute` method updates a specific attribute of the field using a function that takes the old value and returns the new value.
-/// - `updater` getter returns a `JustFieldUpdater` object that can be used to update the field's state.
-class JustFieldController<T> {
-  late final JustFormController _controller;
-  final String name;
-  final bool internal;
+class JustFieldController<T> extends Cubit<JustFieldState<T>>
+    implements JustFieldInternalControllerInterface<T> {
+  JustFormController? _formController;
+  JustFieldController(super.initialState);
 
-  /// Constructor for the `JustFieldController` class.
-  ///
-  /// It initializes the `name`, `internal`, and `_controller` fields.
-  JustFieldController({
-    required this.name,
-    required JustFormController controller,
-    required this.internal,
-  }) {
-    _controller = controller;
+  void update(JustFieldState<T> newState) {
+    // print("emit ${newState.name} ${newState.mode}");
+    emit(newState);
   }
 
-  /// Returns the current value of the field. If the field has not been registered yet, it returns null.
-  T? getValue() => state?.value;
+  final Debouncer _validationDebouncer = Debouncer(
+    delay: Duration(milliseconds: 200),
+  );
 
-  /// alias for [getValue]
+  @override
+  T? getValue() => state.value;
+
+  @override
   T? get value => getValue();
 
-  /// Updates the value of the field with the given value.
-  ///
-  /// If [internal] is true, the parent form will not be notified about the change.
-  /// The method returns immediately and does not block the execution of the calling code.
-  /// The actual update of the field is done using a debouncer, which is set to a duration of 300 milliseconds.
-  /// This means that the field will only be updated if the value has not changed within the last 300 milliseconds.
-  void setValue(T? value) {
-    updater.withValue(value, internal: internal).update();
-    validate();
-  }
+  @override
+  String? getError() => state.error;
 
-  /// alias for [setValue]
-  set value(T? value) => setValue(value);
-
-  /// Returns the current error of the field. If the field has not been registered yet, it returns null.
-  String? getError() => state?.error;
-
-  /// alias for [getError]
+  @override
   String? get error => getError();
 
-  /// Sets the error of the field.
-  setError(String? error) => updater.withError(error, force: true).update();
+  @override
+  X? getAttribute<X>(String attributeName) =>
+      state.attributes[attributeName] as X?;
 
-  /// alias for [setError]
-  set error(String? error) => setError(error);
-
-  /// Checks if the field's value has changed from its initial value.
-  bool get isDirty => state?.valueEqualWith(state?.initialValue) ?? false;
-
-  /// Checks if the field's error is null, indicating it's valid.
-  bool get isValid => error == null;
-
-  /// Returns the current state of the field. If the field has not been registered yet, it returns null.
-  JustFieldState<T>? getState() {
-    return _controller
-            .state[name] //.where((element) => element.name == name).firstOrNull
-        as JustFieldState<T>?;
+  void setAttribute(String key, value) {
+    patchAttribute(key, value);
   }
 
-  /// alias for [getState]
-  JustFieldState<T>? get state => getState();
+  JustFieldInternalController<T> get _internal =>
+      JustFieldInternalController(this);
 
-  /// Returns the initial value of the field.
-  T? getInitialValue() => state?.initialValue;
-
-  /// alias for [getInitialValue]
-  T? get initialValue => getInitialValue();
-
-  /// Validates the field.
-  ///
-  /// If [force] is true, then the error of the field will be updated even field is untouched.
-  /// If the field has not been registered yet, it returns true.
-  /// If the validation result is true, then the error of the field will be set to null.
-  /// If the validation result is false, then the error of the field will be set to the error returned by the validator.
-  Future<bool> validate({bool force = true, noDebounce = false}) async {
-    var fieldState = state;
-    if (fieldState == null ||
-        !fieldState.hasField ||
-        fieldState.validators.isNotEmpty) {
-      return true;
-    }
-    var debouncer = _controller._fieldsDebounce[name];
-    if (debouncer != null) {
-      bool doValidate() {
-        return fieldState._validateInner(
-          values: _controller.values,
-          onFieldError: (name, error, isSelf, msgCheck) {
-            if (name == justReservedFieldName) {
-              name = this.name;
-              isSelf = true;
-            }
-            if (isSelf) {
-              updater.withError(error, force: force).softUpdate();
-            } else {
-              var target = _controller.field(name);
-              var targetUpdater = JustFieldUpdater(
-                target.name,
-                _controller,
-                _controller.field(name).state,
-              );
-              if (error == null) {
-                if (target.error == msgCheck) {
-                  targetUpdater.withError(null, force: force).softUpdate();
-                }
-              } else {
-                if (target.error == null) {
-                  targetUpdater.withError(error, force: force).softUpdate();
-                }
-              }
-            }
-          },
+  void _changeValue(
+    T? value, {
+    JustFieldStateMode mode = JustFieldStateMode.update,
+    bool validateForm = true,
+    bool triggerChangeListeners = true,
+  }) {
+    var newState = state.copyWith(
+      value: value,
+      mode: [mode],
+      initialValue: mode == JustFieldStateMode.initialization
+          ? value
+          : state.initialValue,
+    );
+    if (mode == JustFieldStateMode.updateInternal) {
+      update(newState);
+      _validationDebouncer.run(() {
+        setError(_innerValidate(newState));
+        _formController?._validateForm([state.name]);
+      });
+    } else if (mode == JustFieldStateMode.update) {
+      var error = _innerValidate(newState);
+      if (error == null) {
+        update(newState._clearError(addMode: true));
+      } else {
+        update(
+          newState.copyWith(
+            mode: newState.mode..add(JustFieldStateMode.error),
+            error: error,
+          ),
         );
       }
-
-      // print("bounce");
-
-      var validDebounce = noDebounce
-          ? doValidate()
-          : await debouncer.run(() async {
-              return doValidate();
-            });
-
-      if (validDebounce) {
-        print("whis");
-        updater.withError(null).softUpdate();
+      if (validateForm) {
+        _formController?._validateForm([state.name]);
       }
-      // print("here");
-      updater.update();
-      return validDebounce;
+    } else {
+      update(newState);
     }
-    return false;
-  }
 
-  /// Returns the value of the attribute with the given [key].
-  /// If the attribute with the given [key] does not exist, it returns null.
-  /// The returned value is cast to [X].
-  /// If the field has not been registered yet, it returns null.
-  X? getAttribute<X>(String key) {
-    var fieldState = state;
-    if (fieldState?.attributes[key] == null) return null;
-    return fieldState?.attributes[key] as X?;
-  }
-
-  /// Sets the value of the attribute with the given [key].
-  /// If the attribute with the given [key] does not exist, it will be created.
-  /// If the field has not been registered yet, it does nothing.
-  /// If the field has focus, it will first unfocus the field.
-  void setAttribute<X>(String key, X? value) {
-    var fieldState = state;
-    if (fieldState == null) return;
-    var hasFocus = fieldState.focusNode?.hasFocus;
-    if (hasFocus == true) {
-      fieldState.focusNode?.unfocus();
+    if (triggerChangeListeners && mode != JustFieldStateMode.initialization) {
+      _formController?._notifyValuesChangedListeners();
     }
-    updater.withAttributes({key: value}).update();
   }
 
-  /// Patches the attribute with the given [key] by calling the given [patch] function
-  /// with the current value of the attribute as the argument.
-  /// The result of the [patch] function is then set as the new value of the attribute.
-  /// If the attribute with the given [key] does not exist, it will be created.
-  void patchAttribute<X>(String key, X? Function(X? oldValue) patch) {
-    setAttribute(key, patch(getAttribute(key)));
+  void setValue(T? value) =>
+      _changeValue(value, mode: JustFieldStateMode.update);
+
+  set value(T? value) => setValue(value);
+
+  /// Set the error of the field to [error]. If [error] is null, clear the error.
+  /// If the error is the same as the current error, do nothing.
+  ///
+  /// [errorId] is an optional parameter to specify an error id. If not provided, it defaults to -1.
+  ///
+  /// Call this function to notify the form of an error change.
+  void setError(String? error, {int errorId = -1}) {
+    if (error == state.error) return;
+    update(
+      error == null
+          ? state._clearError()
+          : state.copyWith(
+              error: error,
+              mode: [JustFieldStateMode.error],
+              errorId: errorId,
+            ),
+    );
+
+    _formController?._notifyErrorChangedListeners();
   }
 
-  /// Returns a [JustFieldUpdater] object that can be used to update the field's state.
-  JustFieldUpdater get updater => JustFieldUpdater(name, _controller, state);
+  set error(String? error) => setError(error);
+
+  void patchAttribute<X>(String attributeName, X? Function(X? value) builder) {
+    patchAttributes({attributeName: builder(state.attributes[attributeName])});
+  }
+
+  void patchAttributes(Map<String, dynamic> attributes) {
+    state.focusNode?.unfocus();
+    update(
+      state.copyWith(
+        attributes: {...state.attributes, ...attributes},
+        mode: [JustFieldStateMode.attribute],
+      ),
+    );
+  }
+
+  @override
+  Map<String, dynamic> getAttributes() {
+    return state.attributes;
+  }
+
+  @override
+  Map<String, dynamic> get attributes => getAttributes();
+
+  @override
+  Future<void> close() {
+    _validationDebouncer.cancel();
+    return super.close();
+  }
+
+  void dispose() {
+    close();
+  }
+
+  void validate() {
+    setError(_innerValidate(state, external: true));
+    _formController?._validateForm([state.name]);
+  }
+
+  String? _innerValidate(JustFieldState<T> state, {bool external = false}) {
+    if (external) {
+      update(state.copyWith(mode: [JustFieldStateMode.validateExternal]));
+    }
+
+    String? valid;
+    for (var validator in state.validators) {
+      valid = validator?.call(state.value);
+      if (valid != null) break;
+    }
+    return valid;
+  }
+}
+
+abstract class JustFieldInternalControllerInterface<T> {
+  T? getValue();
+  T? get value;
+
+  String? getError();
+  String? get error;
+
+  Map<String, dynamic> getAttributes();
+  Map<String, dynamic> get attributes;
+
+  X? getAttribute<X>(String key);
+}
+
+class JustFieldInternalController<T>
+    implements JustFieldInternalControllerInterface<T> {
+  final JustFieldController<T> _controller;
+  JustFieldInternalController(this._controller);
+
+  @override
+  T? getValue() => _controller.state.value;
+  @override
+  T? get value => getValue();
+
+  @override
+  String? getError() => _controller.state.error;
+  @override
+  String? get error => getError();
+
+  @override
+  Map<String, dynamic> getAttributes() => _controller.state.attributes;
+  @override
+  Map<String, dynamic> get attributes => getAttributes();
+
+  @override
+  X? getAttribute<X>(String key) => _controller.state.attributes[key];
+
+  void setValue(T? value) {
+    _controller._changeValue(value, mode: JustFieldStateMode.updateInternal);
+  }
+
+  set value(T? value) => setValue(value);
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
 
 /// This class, `JustSwitchListTile`, is a stateless widget in Flutter that provides a switch list tile for a form. Here's a summary of what each method does:
 /// - `name`: The name of the field in the form. This is required for validation.
@@ -33,7 +32,7 @@ class JustSwitchListTile extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<bool>> validators;
+  final List<FormFieldValidator<bool>> validators;
 
   /// Called when the user toggles the switch on or off.
   ///
@@ -61,6 +60,8 @@ class JustSwitchListTile extends StatelessWidget {
   /// ```
   /// {@end-tool}
   final ValueChanged<bool>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// {@macro flutter.material.switch.activeThumbColor}
   ///
@@ -224,6 +225,7 @@ class JustSwitchListTile extends StatelessWidget {
 
     required this.name,
     this.initialValue,
+    this.saveValueOnDestroy = true,
     this.validators = const [],
     this.onChanged,
     this.activeThumbColor,
@@ -262,9 +264,10 @@ class JustSwitchListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return JustField<bool>(
       name: name,
-      initialValue: initialValue,
+      initialValue: initialValue ?? false,
       validators: validators,
       notifyInternalUpdate: true,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:just_form/field/just_checkbox.dart';
 import 'package:just_form/field/just_checkbox_list_tile.dart';
 import 'package:just_form/field/just_drop_down_button.dart';
+import 'package:just_form/field/just_nested_builder.dart';
 import 'package:just_form/field/just_radio_group.dart';
 import 'package:just_form/field/just_range_slider.dart';
 import 'package:just_form/field/just_switch.dart';
 import 'package:just_form/field/just_switch_list_tile.dart';
 import 'package:just_form/field/just_text_field.dart';
 import 'package:just_form/field/just_slider.dart';
-import 'package:just_form/just_field_error.dart';
 import 'package:just_form/just_form_builder.dart';
 import 'package:just_form/just_builder.dart';
-import 'package:just_form/just_nested_builder.dart';
+import 'package:just_form/just_target_error.dart';
 import 'package:just_form/just_validator.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -37,10 +37,7 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
-
-  // final _controller = JustFormController(
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +53,29 @@ class MyHomePage extends StatelessWidget {
             "re-password": "passwwwww",
             "check": true,
             "name": "john zz",
+            "nested-form": {"sub-name": "sub"},
           },
+          // onValuesChanged: (value) => print("value change $value"),
+          // onErrorsChanged: (value) => print("errors change $value"),
+          validators: [
+            JustValidator(
+              triggers: ["password", "re-password"],
+              validator: (value) {
+                if (value?["password"] != value?["re-password"]) {
+                  return "not_match";
+                }
+                return null;
+              },
+              targets: [
+                JustTargetError(
+                  field: "re-password",
+                  message: (error) {
+                    return "The password doesn't match";
+                  },
+                ),
+              ],
+            ),
+          ],
           builder: (context) => Column(
             children: [
               Expanded(
@@ -73,21 +92,11 @@ class MyHomePage extends StatelessWidget {
                             hintText: "Input Username",
                           ),
                           validators: [
-                            JustValidator.common(
-                              Validatorless.multiple([
-                                Validatorless.required(
-                                  'The field is obligatory',
-                                ),
-                                Validatorless.min(4, 'Min lenght 4'),
-                                Validatorless.max(20, 'Max lenght 20'),
-                              ]),
-                            ),
-                            JustValidator<String>(
-                              validator: (value, formValues) =>
-                                  ((value?.length) ?? 0) <= 5
-                                  ? "username value must be more than 5"
-                                  : null,
-                            ),
+                            Validatorless.multiple([
+                              Validatorless.required('The field is obligatory'),
+                              Validatorless.min(4, 'Min lenght 4'),
+                              Validatorless.max(20, 'Max lenght 20'),
+                            ]),
                           ],
                         ),
                         JustTextField(
@@ -100,7 +109,7 @@ class MyHomePage extends StatelessWidget {
                               onPressed: () {
                                 context.justForm
                                     .field("password")
-                                    .patchAttribute<bool>(
+                                    ?.patchAttribute<bool>(
                                       "obscureText",
                                       (oldValue) => !(oldValue ?? true),
                                     );
@@ -109,22 +118,7 @@ class MyHomePage extends StatelessWidget {
                             ),
                           ),
                           validators: [
-                            JustValidator.common(
-                              Validatorless.required('The field is obligatory'),
-                            ),
-                            JustValidator<String>(
-                              validator: (value, formValues) {
-                                return value == formValues["re-password"]
-                                    ? null
-                                    : "error";
-                              },
-                              targets: [
-                                JustFieldError(
-                                  field: "re-password",
-                                  message: (error) => "Password not match",
-                                ),
-                              ],
-                            ),
+                            Validatorless.required('The field is obligatory'),
                           ],
                         ),
                         JustTextField(
@@ -137,7 +131,7 @@ class MyHomePage extends StatelessWidget {
                               onPressed: () {
                                 context.justForm
                                     .field("re-password")
-                                    .patchAttribute<bool>(
+                                    ?.patchAttribute<bool>(
                                       "obscureText",
                                       (oldValue) => !(oldValue ?? true),
                                     );
@@ -145,64 +139,49 @@ class MyHomePage extends StatelessWidget {
                               icon: Icon(Icons.visibility, color: Colors.grey),
                             ),
                           ),
-                          validators: [
-                            JustValidator<String>(
-                              validator: (value, formValues) {
-                                return value == formValues["password"]
-                                    ? null
-                                    : "Password not match";
-                              },
-                            ),
-                          ],
                         ),
-                        // JustNestedBuilder(
-                        //   name: "sub-form",
-                        //   builder: (context) {
-                        //     return Column(
-                        //       children: [
-                        //         JustTextField(
-                        //           name: "sub-desc",
-                        //           validators: [
-                        //             JustValidator.common(
-                        //               Validatorless.required(
-                        //                 'The field is obligatory',
-                        //               ),
-                        //             ),
-                        //           ],
-                        //         ),
-                        //         JustTextField(
-                        //           name: "sub-desc2",
-                        //           validators: [
-                        //             JustValidator.common(
-                        //               Validatorless.required(
-                        //                 'The field is obligatory',
-                        //               ),
-                        //             ),
-                        //           ],
-                        //         ),
-                        //         JustNestedBuilder(
-                        //           name: "sub-sub-1",
-                        //           builder: (context) {
-                        //             return Column(
-                        //               children: [
-                        //                 JustTextField(
-                        //                   name: "sub-sub-1-desc",
-                        //                   validators: [
-                        //                     JustValidator.common(
-                        //                       Validatorless.required(
-                        //                         'The field is obligatory',
-                        //                       ),
-                        //                     ),
-                        //                   ],
-                        //                 ),
-                        //               ],
-                        //             );
-                        //           },
-                        //         ),
-                        //       ],
-                        //     );
-                        //   },
-                        // ),
+                        JustNestedBuilder(
+                          name: "sub-form-2",
+                          builder: (context) {
+                            return Column(
+                              children: [
+                                JustTextField(
+                                  name: "sub-desc",
+                                  validators: [
+                                    Validatorless.required(
+                                      'The field is obligatory',
+                                    ),
+                                  ],
+                                ),
+                                JustTextField(
+                                  name: "sub-desc2",
+                                  validators: [
+                                    Validatorless.required(
+                                      'The field is obligatory',
+                                    ),
+                                  ],
+                                ),
+                                JustNestedBuilder(
+                                  name: "sub-sub-1",
+                                  builder: (context) {
+                                    return Column(
+                                      children: [
+                                        JustTextField(
+                                          name: "sub-sub-1-desc",
+                                          validators: [
+                                            Validatorless.required(
+                                              'The field is obligatory',
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                         JustRadioGroup(
                           name: "radioGroup",
                           initialValue: "B",
@@ -211,7 +190,7 @@ class MyHomePage extends StatelessWidget {
                             children: [
                               GestureDetector(
                                 onTap: () {
-                                  context.justForm.field("radioGroup").value =
+                                  context.justForm.field("radioGroup")?.value =
                                       "A";
                                 },
                                 child: Row(
@@ -224,7 +203,7 @@ class MyHomePage extends StatelessWidget {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  context.justForm.field("radioGroup").value =
+                                  context.justForm.field("radioGroup")?.value =
                                       "B";
                                 },
                                 child: Row(
@@ -237,7 +216,7 @@ class MyHomePage extends StatelessWidget {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  context.justForm.field("radioGroup").value =
+                                  context.justForm.field("radioGroup")?.value =
                                       "C";
                                 },
                                 child: Row(
@@ -261,7 +240,10 @@ class MyHomePage extends StatelessWidget {
                           fields: JustBuilderFields.one("check"),
                           notifyValueUpdate: true,
                           builder: (context, state) {
-                            return state.field('check').value == true
+                            // return state.field('check')?.value == true
+                            //     ? Text("true")
+                            //     : Text("false");
+                            return state.field('check')?.value == true
                                 ? Column(
                                     spacing: 10,
                                     children: [
@@ -272,10 +254,8 @@ class MyHomePage extends StatelessWidget {
                                           hintText: "Input Name",
                                         ),
                                         validators: [
-                                          JustValidator.common(
-                                            Validatorless.required(
-                                              'The field is obligatory',
-                                            ),
+                                          Validatorless.required(
+                                            'The field is obligatory',
                                           ),
                                         ],
                                       ),
@@ -361,8 +341,9 @@ class MyHomePage extends StatelessWidget {
                                               // reset value
                                               context.justForm
                                                   .field("slider")
-                                                  .value = context.justForm
+                                                  ?.value = context.justForm
                                                   .field("slider")
+                                                  ?.state
                                                   .initialValue;
                                             },
                                             icon: Icon(Icons.refresh),
@@ -374,7 +355,7 @@ class MyHomePage extends StatelessWidget {
                                         notifyValueUpdate: true,
                                         builder: (context, state) {
                                           return Text(
-                                            "Slider Value: ${state.field("slider").value}",
+                                            "Slider Value: ${state.field("slider")?.value}",
                                           );
                                         },
                                       ),
@@ -388,6 +369,36 @@ class MyHomePage extends StatelessWidget {
                                     ],
                                   )
                                 : SizedBox.shrink();
+                          },
+                        ),
+
+                        JustNestedBuilder(
+                          name: "nested-form",
+                          builder: (context) {
+                            return Column(
+                              spacing: 10,
+                              children: [
+                                JustTextField(
+                                  name: "sub-name",
+                                  decoration: InputDecoration(
+                                    labelText: "Sub name",
+                                  ),
+                                  validators: [
+                                    Validatorless.min(4, 'Min lenght 4'),
+                                  ],
+                                ),
+                                JustTextField(
+                                  name: "sub-last",
+                                  decoration: InputDecoration(
+                                    labelText: "Sub last",
+                                  ),
+                                  validators: [
+                                    Validatorless.required('this required'),
+                                    Validatorless.min(6, 'Min lenght 6'),
+                                  ],
+                                ),
+                              ],
+                            );
                           },
                         ),
                       ],
@@ -405,14 +416,16 @@ class MyHomePage extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           // _controller.field("username").value = "haaaahaa";
-                          context.justForm.values = {
-                            "username": "jo",
-                            "password": "pass0",
-                            "re-password": "password",
-                            "check": true,
-                            "name": "john doe",
-                            "switch-tile": true,
-                          };
+                          // context.justForm.patchValues({
+                          //   "username": "jo",
+                          //   "password": "pass0",
+                          //   "re-password": "password",
+                          //   "check": true,
+                          //   "name": "john doe",
+                          //   "switch-tile": true,
+                          // });
+
+                          context.justForm.field("username")?.setError("error");
                         },
                         child: Text("Set Value"),
                       ),
@@ -422,15 +435,12 @@ class MyHomePage extends StatelessWidget {
                       width: double.maxFinite,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.justForm
-                              .validate(exitOnFirstError: false)
-                              .then((value) {
-                                if (context.mounted) {
-                                  // print("Form Validated");
-                                  debugPrint("${context.justForm.values}");
-                                  debugPrint("${context.justForm.errors}");
-                                }
-                              });
+                          if (context.justForm.validate()) {
+                            debugPrint(
+                              "values ${context.justForm.getValues(withHiddenFields: true)}",
+                            );
+                          }
+                          debugPrint("errors ${context.justForm.errors}");
                         },
                         child: Text("Submit"),
                       ),

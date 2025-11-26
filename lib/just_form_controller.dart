@@ -2,296 +2,281 @@ part of 'just_form_builder.dart';
 
 const String justReservedFieldName = "_self";
 
-/// This `JustFormController` class is a state management controller for a form. Here's a summary of what each method does:
-///
-/// - `JustFormController({Map<String, dynamic>? initialValues})`: This is the constructor for the class. It initializes the form controller with an optional `initialValues` map.
-/// - `getValues()`: This method returns a map of field names to their current values.
-/// - `setValues(Map<String, dynamic> values, {bool withValidation = false})`: This method sets multiple field values at the same time. If `withValidation` is true, it also calls the `validate` method after setting the values.
-/// - `validate({exitOnFirstError = false})`: This method validates all the fields in the form. If `exitOnFirstError` is true, it returns false as soon as it encounters a field with an error. Otherwise, it returns false only if all the fields have errors.
-/// - `getErrors()`: This method returns a map of field names to their current errors.
-/// - `get isValid`: This getter returns true if all the fields in the form have no errors.
-/// - `field(String name)`: This method returns a `JustFieldController` for the given field name. The returned controller can be used to get the value of the field, set the value of the field, and validate the field.
-/// - `_commit()`: This method commits the current pending values to the state and clears the pending values map. It's used internally by the `JustFormController` to manage the state of the form.
-/// - `_pendingPatch(String name, JustFieldState field)`: This method patches the given field into the `_pendingValues` map. If the `_pendingValues` map is empty, it initializes it with a copy of the current state. It's used internally by the `JustFormController` to manage the pending values of the form.
-/// - `_patch(String name, JustFieldState field)`: This method patches the given field into the `_pendingValues` map and then commits the pending values to the state. It's used internally by the `JustFormController` to manage the state of the form.
-/// - `_unReg(String name)`: This method unregisters the given field from the form controller and removes all its associated data from the state and the pending values map. It's used internally by the `JustFormController` to manage the state of the form.
-/// - `_registerField(T initialValue, List<JustValidator<T>> validators, bool Function(T a, T b)? isEqual, FocusNode? focusnode)`: This method registers a field with the given name, initial value, validators, isEqual, and focusnode into the form controller. It's used internally by the `JustFormController` to manage the state of the form.
-/// - `_field<T>(String name, {bool internal = false})`: This method returns a `JustFieldController` for the given field name. If `internal` is true, the controller will not notify the parent about changes to the value of the field.
-/// - `close()`: This method cancels all the pending debounces of the fields and then calls the parent's close method. It overrides the parent's close method.
-/// - `dispose()`: This method calls the parent's close method. It's equivalent to `close()`.
-class JustFormController extends Cubit<Map<String, JustFieldState>> {
-  /// Creates a new instance of [JustFormController].
-  ///
-  /// The [initialValues] can be used to set the initial values of the form.
-  JustFormController({Map<String, dynamic>? initialValues}) : super({}) {
-    if (initialValues != null && initialValues.isNotEmpty) {
-      values = initialValues;
+class JustRegisteredField<T> {
+  final String name;
+  final T? initialValue;
+  final T? savedValue;
+  final JustFieldController<T>? controller;
+  const JustRegisteredField({
+    required this.name,
+    this.initialValue,
+    this.savedValue,
+    this.controller,
+  });
+}
+
+class JustFormController extends Cubit<Map<String, JustRegisteredField>> {
+  final List<JustValidator> validators = [];
+
+  JustFormController({Map<String, dynamic> initialValues = const {}})
+    : super(
+        initialValues.map(
+          (key, value) => MapEntry(
+            key,
+            JustRegisteredField(name: key, initialValue: value),
+          ),
+        ),
+      );
+
+  Map<String, dynamic> getValues({withHiddenFields = false}) {
+    var usedState = withHiddenFields
+        ? Map.from(state)
+        : (Map.from(state)
+            ..removeWhere((key, value) => value.controller == null));
+    return usedState.map(
+      (key, value) =>
+          MapEntry(key, value.controller?.state.value ?? value.savedValue),
+    );
+  }
+
+  final List<ValueChanged<Map<String, dynamic>>> _valuesChangedListeners = [];
+  final List<ValueChanged<Map<String, String?>>> _errorChangedListeners = [];
+
+  void addValuesChangedListener(ValueChanged<Map<String, dynamic>> listener) {
+    _valuesChangedListeners.add(listener);
+  }
+
+  void removeValuesChangedListener(
+    ValueChanged<Map<String, dynamic>> listener,
+  ) {
+    _valuesChangedListeners.remove(listener);
+  }
+
+  void _notifyValuesChangedListeners() {
+    print("outer lustner");
+    if (_valuesChangedListeners.isEmpty) return;
+    var value = getValues(withHiddenFields: true);
+    for (var listener in _valuesChangedListeners) {
+      Future(() {
+        listener(value);
+      });
     }
   }
 
-  final Map<String, Debouncer<bool>> _fieldsDebounce = {};
-  final Set<String> _registeredFields = {};
-
-  DateTime _softUpdated = DateTime.now();
-  DateTime _commited = DateTime.now();
-
-  Map<String, JustFieldState> _pendingValues = {};
-
-  Map<String, JustFieldState> _getPendingValues() => _pendingValues;
-  void _patchPendingValues(Map<String, JustFieldState> patch) {
-    _softUpdated = DateTime.now();
-    print("update here");
-    _pendingValues = {..._pendingValues, ...patch};
+  void addErrorChangedListener(ValueChanged<Map<String, String?>> listener) {
+    _errorChangedListeners.add(listener);
   }
 
-  /// Returns a map of field names to their current values.
-  ///
-  /// The returned map has the same keys as [state] and the values are
-  /// the current values of the fields.
-  ///
-  Map<String, dynamic> getValues() {
-    return state.map((key, value) => MapEntry(key, value.value));
+  void removeErrorChangedListener(ValueChanged<Map<String, String?>> listener) {
+    _errorChangedListeners.remove(listener);
   }
 
-  /// alias for [getValues]
-  Map<String, dynamic> get values {
-    return getValues();
-  }
-
-  /// Sets multiple field values at the same time.
-  ///
-  /// [values] is a map of field names to their new values.
-  ///
-  /// If [withValidation] is true, then this function will also call
-  /// [validate] after setting the values.
-  ///
-  void setValues(Map<String, dynamic> values, {bool withValidation = false}) {
-    for (var entry in values.entries) {
-      field(entry.key).updater.withValue(entry.value).softUpdate();
-    }
-    // print(_pendingValues);
-    _commit("set values");
-    if (withValidation) {
-      validate();
+  void _notifyErrorChangedListeners() {
+    if (_errorChangedListeners.isEmpty) return;
+    var value = getErrors();
+    for (var listener in _errorChangedListeners) {
+      Future(() {
+        listener(value);
+      });
     }
   }
 
-  /// alias for [setValues]
-  set values(Map<String, dynamic> values) {
-    setValues(values);
-  }
+  Map<String, dynamic> get values => getValues();
 
-  /// Validates all the fields in the form.
-  ///
-  /// If [exitOnFirstError] is true, then this function will return false
-  /// as soon as it encounters a field with an error. Otherwise, it will
-  /// return false only if all the fields have errors.
-  Future<bool> validate({bool exitOnFirstError = false}) async {
-    var valid = true;
-    for (var fieldState in state.values) {
-      if (!await field(fieldState.name).validate(noDebounce: true)) {
-        if (exitOnFirstError) {
-          return false;
+  void patchValues(Map<String, dynamic> patch) {
+    Map<String, JustRegisteredField> noController = {};
+    patch.forEach((key, value) {
+      if (state[key]?.controller == null) {
+        var registered = state[key];
+        if (state[key] == null) {
+          noController[key] = JustRegisteredField(
+            name: key,
+            initialValue: value,
+            savedValue: value,
+          );
+        } else {
+          noController[key] = JustRegisteredField(
+            name: key,
+            initialValue: registered!.initialValue,
+            savedValue: value,
+          );
         }
+      } else {
+        state[key]?.controller?._changeValue(
+          value,
+          validateForm: false,
+          triggerChangeListeners: false,
+        );
+      }
+    });
 
-        if (valid == true) {
-          valid = false;
+    if (noController.isNotEmpty) emit({...state, ...noController});
+
+    _notifyValuesChangedListeners();
+    _validateForm(patch.keys.toList());
+  }
+
+  bool validate() {
+    state.values.where((registered) => registered.controller != null).forEach((
+      registered,
+    ) {
+      registered.controller!.setError(
+        registered.controller!._innerValidate(
+          registered.controller!.state,
+          external: true,
+        ),
+      );
+    });
+
+    _validateForm(state.keys.toList());
+
+    return isValid;
+  }
+
+  get isValid => getErrors().isEmpty;
+
+  Map<String, String?> getErrors() {
+    var error = Map<String, JustRegisteredField>.from(state).map((key, value) {
+      return MapEntry(key, value.controller?.getError());
+    })..removeWhere((key, value) => value == null);
+
+    return error;
+  }
+
+  Map<String, String?> get errors => getErrors();
+
+  Map<String, JustFieldController?> get fields =>
+      state.map((key, value) => MapEntry(key, value.controller));
+  JustFieldController<T>? field<T>(String name) =>
+      state[name]?.controller as JustFieldController<T>?;
+
+  void _remove(String fieldName, bool saveValueOnRemove) {
+    var registeredField = state[fieldName];
+    if (registeredField == null) return;
+
+    emit({
+      ...state,
+      ...{
+        fieldName: JustRegisteredField(
+          name: fieldName,
+          initialValue: registeredField.initialValue,
+          savedValue: saveValueOnRemove
+              ? (registeredField.controller?.state.value)
+              : registeredField.initialValue,
+          controller: registeredField.controller,
+        ),
+      },
+    });
+  }
+
+  JustFieldController<T> _register<T>(JustFieldState<T> initialState) {
+    var registeredField = state[initialState.name];
+    JustFieldController<T> fieldController =
+        (registeredField?.controller as JustFieldController<T>?) ??
+        JustFieldController<T>(initialState);
+    fieldController._formController = this;
+
+    if (registeredField != null) {
+      fieldController._changeValue(
+        registeredField.savedValue ?? registeredField.initialValue,
+        mode: JustFieldStateMode.initialization,
+      );
+    }
+
+    emit({
+      ...state,
+      ...{
+        fieldController.state.name: JustRegisteredField(
+          name: fieldController.state.name,
+          controller: fieldController,
+          initialValue:
+              registeredField?.initialValue ?? fieldController.state.value,
+          savedValue:
+              registeredField?.savedValue ??
+              registeredField?.initialValue ??
+              fieldController.state.value,
+        ),
+      },
+    });
+    // if (registeredField == null) {
+    //   emit({
+    //     ...state,
+    //     ...{
+    //       fieldController.state.name: JustRegisteredField(
+    //         name: fieldController.state.name,
+    //         controller: fieldController,
+    //         initialValue: fieldController.state.value,
+    //         savedValue: fieldController.state.value,
+    //       ),
+    //     },
+    //   });
+    //   return fieldController;
+    // } else {
+    //   fieldController._changeValue(
+    //     registeredField.savedValue ?? registeredField.initialValue,
+    //     mode: JustFieldStateMode.initialization,
+    //   );
+    //   emit({
+    //     ...state,
+    //     ...{
+    //       fieldController.state.name: JustRegisteredField(
+    //         name: fieldController.state.name,
+    //         controller: fieldController,
+    //         initialValue: registeredField.initialValue,
+    //         savedValue:
+    //             registeredField.savedValue ?? registeredField.initialValue,
+    //       ),
+    //     },
+    //   });
+    // fieldController.close();
+    return fieldController;
+    // }
+  }
+
+  void _validateForm(List<String> fields) {
+    if (validators.isEmpty) return;
+
+    for (var f in fields) {
+      var triggerValidators = validators
+          .where((e) => e.triggers.contains(f))
+          .toList();
+
+      for (int i = 0; i < triggerValidators.length; i++) {
+        var validator = triggerValidators[i];
+        if (validator.targets.isEmpty && field(f)?.state.error != null) {
+          continue;
+        }
+        if (validator.targets.isEmpty) {
+          field(f)?.setError(validator.validator(values));
+        } else {
+          for (var target in validator.targets) {
+            var targetField = field(target.field);
+            if (targetField == null) continue;
+
+            var error = validator.validator(values);
+            if (error != null && targetField.state.error == null) {
+              targetField.setError(target.message(error), errorId: i);
+            } else if (error == null && targetField.state.errorId == i) {
+              targetField.setError(null);
+            }
+          }
         }
       }
     }
-    return valid;
   }
 
-  /// Returns a map of field names to their current errors. If a field has
-  /// no error, then the value associated with that field name is null.
-  ///
-  /// Map&lt;String, String?&gt; errors = form.getErrors();
-  /// print(errors); // prints {field1: null, field2: 'error message'}
-  Map<String, String?> getErrors() {
-    return Map.fromEntries(state.values.map((e) => MapEntry(e.name, e.error)))
-      ..removeWhere((key, value) {
-        return value == null;
-      });
-  }
-
-  /// alias for [getErrors]
-  Map<String, String?> get errors => getErrors();
-
-  /// Returns true if all the fields in the form have no errors.
-  bool get isValid => state.values.every((element) => element.error == null);
-
-  /// Returns a [JustFieldController] for the given field name.
-  ///
-  /// The returned [JustFieldController] can be used to get the value
-  /// of the field, set the value of the field, and validate the field.
-  JustFieldController<T> field<T>(String name) => _field(name);
-
-  List<JustFieldController> getFields() =>
-      state.values.map((e) => _field(e.name)).toList();
-  List<JustFieldController> get fields => getFields();
-
-  /// Commits the current pending values to the state and clears the pending values map.
-  /// This function is used internally by the [JustFormController] to commit the
-  /// current state of the form to the [JustFormController.state] after a
-  /// validation or a value update.
-  /// This function is not intended to be used directly by the user of the
-  /// [JustFormController]. It is used internally by the [JustFormController] to
-  /// manage the state of the form.
-  void _commit(String target) {
-    var clean = Map<String, JustFieldState>.from(state).map((key, value) {
-      return MapEntry(key, value._clean());
+  void dispose() {
+    _valuesChangedListeners.clear();
+    _errorChangedListeners.clear();
+    state.values.map((e) => e.controller).forEach((element) {
+      element?.dispose();
     });
-
-    if (_softUpdated.isBefore(_commited)) {
-      // debugPrint("skip commit. no change");
-      return;
-    }
-
-    debugPrint("target commit $target");
-    emit({...clean, ..._getPendingValues()});
-    _commited = DateTime.now();
-
-    debugPrint(
-      "emit ${_getPendingValues().map((key, value) => MapEntry(key, value.mode))..removeWhere((key, value) => value.contains(JustFieldStateMode.none) && value.length == 1)}",
-    );
-
-    _pendingValues = Map<String, JustFieldState>.from(state).map((key, value) {
-      return MapEntry(key, value._clean());
-    });
+    Future.wait(state.values.map((e) async => e.controller?.close()));
+    close();
   }
+}
 
-  /// Patches the given field into the [_pendingValues] map.
-  /// If the [_pendingValues] map is empty, then it is initialized with a copy of the current state.
-  /// This function is used internally by the [JustFormController] to manage the pending values of the form.
-  void _pendingPatch(String name, JustFieldState field) {
-    if (_getPendingValues().isEmpty) {
-      _patchPendingValues(Map.from(state));
-      // _pendingValues = Map.from(state);
-    }
-    // print("pending $name  , ${field.mode}");
-    // _pendingValues[name] = field;
-    _patchPendingValues({name: field});
-  }
-
-  /// Patches the given field into the [_pendingValues] map and then commits the pending values to the state.
-  ///
-  /// This function is used internally by the [JustFormController] to manage the state of the form.
-  /// It is not intended to be
-  void _patch(String name, JustFieldState field) {
-    _pendingPatch(name, field);
-    _commit("patch");
-  }
-
-  /// Unregisters the given field from the form controller and removes all its associated data from the state and the pending values map.
-  /// This function is used internally by the [JustFormController] to manage the state of the form.
-  /// It is not intended to be used directly by the user of the [JustFormController].
-  void _unReg(String name) {
-    var fieldController = field(name);
-    var fState = fieldController.state;
-    if (fState == null) return;
-    _patch(
-      name,
-      fState._updateField(
-        mode: [JustFieldStateMode.none],
-        value: fState.value,
-        error: null,
-        attributes: fState.attributes,
-        touched: false,
-        focusNode: null,
-        hasFiled: false,
-      ),
-    );
-    _registeredFields.remove(name);
-  }
-
-  /// Registers a field with the given [name], [initialValue], [validators], [isEqual] and [focusnode] into the form controller.
-  ///
-  /// This function is used internally by the [JustFormController] to manage the state of the form.
-  /// It is not intended to be used directly by the user of the [JustFormController].
-  /// If a field with the same [name] is already registered, an exception is thrown.
-  /// If the given [name] is the reserved field name "$justReservedFieldName", an exception is thrown.
-  /// The given [initialValue] is used to initialize the field's value in the form controller's state.
-  /// The given [validators] are used to validate the field's value.
-  /// The given [isEqual] is used to compare the field's value for equality.
-  /// The given [focusnode] is used to associate the field with a focus node in the form controller's state.
-  void _registerField<T>(
-    String name,
-    T? initialValue,
-    List<JustValidator<T>> validators,
-    bool Function(T a, T b)? isEqual,
-    FocusNode? focusnode,
-  ) {
-    if (_registeredFields.contains(name)) {
-      throw Exception("Field $name already registered");
-    }
-
-    if (name == justReservedFieldName) {
-      throw Exception(
-        "Reserved Field name. Field name cannot be $justReservedFieldName",
-      );
-    }
-    _registeredFields.add(name);
-    var fieldController = field(name);
-    var fieldState = fieldController.state;
-
-    if (!_fieldsDebounce.containsKey(name)) {
-      _fieldsDebounce[name] = Debouncer(delay: Duration(milliseconds: 200));
-    }
-
-    if (fieldState != null) {
-      _patch(
-        name,
-        JustFieldState<T>(
-          name: name,
-          mode: fieldState.value == null
-              ? [JustFieldStateMode.none]
-              : [JustFieldStateMode.update],
-          initialValue: fieldState.initialValue as T?,
-          validators: validators,
-          isEqual: isEqual,
-          attributes: fieldState.attributes,
-          value: fieldState.value as T?,
-          focusNode: focusnode,
-          hasField: true,
-        ),
-      );
-    } else {
-      _patch(
-        name,
-        JustFieldState<T>(
-          name: name,
-          validators: validators,
-          isEqual: isEqual,
-          mode: initialValue == null
-              ? [JustFieldStateMode.none]
-              : [JustFieldStateMode.update],
-          value: initialValue,
-          initialValue: initialValue,
-          focusNode: focusnode,
-          hasField: true,
-        ),
-      );
-    }
-  }
-
-  /// Returns a [JustFieldController] for the given field name.
-  ///
-  /// If [internal] is true, the controller will not notify the
-  /// parent about changes to the value of the field.
-  ///
-  /// The returned [JustFieldController] can be used to get the value
-  /// of the field, set the value of the field, and validate the field.
-  JustFieldController<T> _field<T>(String name, {bool internal = false}) =>
-      JustFieldController<T>(controller: this, name: name, internal: internal);
-
-  /// Cancels all the pending debounces of the fields and then calls the parent's close method.
-  @override
-  Future<void> close() {
-    for (var element in _fieldsDebounce.values) {
-      element.cancel();
-    }
-    return super.close();
-  }
-
-  void dispose() => close();
+extension JustFOrmContextExtension on BuildContext {
+  JustFormController get justForm => read<JustFormController>();
+  JustFormController justForm2() => read<JustFormController>();
 }

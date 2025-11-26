@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
 
 /// This class `JustRadioGroup<T>` is a Flutter widget that represents a radio button group in a form. It extends `StatelessWidget` and is used to create a form field with a group of radio buttons. Here's what each method does:
 ///
@@ -33,13 +32,15 @@ class JustRadioGroup<T> extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<T>> validators;
+  final List<FormFieldValidator<T>> validators;
 
   /// Called when selection has changed.
   ///
   /// The value can be null when unselect the [RawRadio] with
   /// [RawRadio.toggleable] set to true.
   final ValueChanged<T?>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
@@ -48,6 +49,7 @@ class JustRadioGroup<T> extends StatelessWidget {
     super.key,
     required this.name,
     required this.child,
+    this.saveValueOnDestroy = true,
     this.initialValue,
     this.validators = const [],
     this.onChanged,
@@ -60,6 +62,7 @@ class JustRadioGroup<T> extends StatelessWidget {
       validators: validators,
       initialValue: initialValue,
       notifyInternalUpdate: true,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {

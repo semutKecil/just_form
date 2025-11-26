@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
 
 /// This class, `JustSlider`, is a stateless widget in Flutter that provides a slider for a form. Here's a summary of what each method does:
 ///
@@ -43,7 +42,7 @@ class JustSlider extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
-  final List<JustValidator<double>> validators;
+  final List<FormFieldValidator<double>> validators;
 
   /// The secondary track value for this slider.
   ///
@@ -94,6 +93,8 @@ class JustSlider extends StatelessWidget {
   ///  * [onChangeEnd] for a callback that is called when the user stops
   ///    changing the value.
   final ValueChanged<double>? onChanged;
+
+  final bool saveValueOnDestroy;
 
   /// Called when the user starts selecting a new value for the slider.
   ///
@@ -338,6 +339,7 @@ class JustSlider extends StatelessWidget {
     super.key,
     required this.name,
     this.initialValue,
+    this.saveValueOnDestroy = true,
     this.validators = const [],
     this.secondaryTrackValue,
     this.onChanged,
@@ -366,6 +368,7 @@ class JustSlider extends StatelessWidget {
       validators: validators,
       initialValue: initialValue ?? min,
       notifyInternalUpdate: true,
+      saveValueOnDestroy: saveValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
