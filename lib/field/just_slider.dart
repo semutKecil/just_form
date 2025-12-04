@@ -5,7 +5,6 @@ import 'package:just_form/just_form_builder.dart';
 ///
 /// - `name`: The name of the field in the form. This is required for validation.
 /// - `initialValue`: The initial value of the field. This value is ignored if it's already set in the `JustFormController` or `JustForm`.
-/// - `validators`: A list of validators to check the value of the field against.
 /// - `onChanged`: A callback function that is called when the user toggles the switch on or off.
 /// - `activeColor`, `inactiveColor`, `secondaryActiveColor`, `thumbColor`: These are optional parameters that customize the appearance of the slider.
 /// - `min`, `max`: These define the range of values the user can select.
@@ -19,7 +18,7 @@ import 'package:just_form/just_form_builder.dart';
 /// - `padding`: Determines the padding around the slider.
 ///
 /// The `build` method builds the widget and returns a `JustField<double>` with a `Slider` as its builder. The `Slider` widget is configured with the parameters passed to the `JustSlider` constructor and the values from the `JustField` state.
-class JustSlider extends StatelessWidget {
+class JustSlider extends StatelessWidget implements JustFieldAbstract<double> {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
@@ -27,22 +26,13 @@ class JustSlider extends StatelessWidget {
   ///
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
+  @override
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
   /// is already set on the [JustFormController] or [JustForm].
+  @override
   final double? initialValue;
-
-  /// A list of validators to check the value of the field against.
-  ///
-  /// These validators will be run whenever the value of the field changes.
-  ///
-  /// The validators will be passed the current value of the field and the
-  /// entire form values.
-  ///
-  /// If any of the validators return an error string, the field will be
-  /// marked as invalid.
-  final List<FormFieldValidator<double>> validators;
 
   /// The secondary track value for this slider.
   ///
@@ -92,9 +82,14 @@ class JustSlider extends StatelessWidget {
   ///    changing the value.
   ///  * [onChangeEnd] for a callback that is called when the user stops
   ///    changing the value.
+  @override
   final ValueChanged<double>? onChanged;
 
-  final bool saveValueOnDestroy;
+  @override
+  final bool keepValueOnDestroy;
+
+  @override
+  final Map<String, dynamic> initialAttributes;
 
   /// Called when the user starts selecting a new value for the slider.
   ///
@@ -338,9 +333,9 @@ class JustSlider extends StatelessWidget {
   const JustSlider({
     super.key,
     required this.name,
+    this.initialAttributes = const {},
     this.initialValue,
-    this.saveValueOnDestroy = true,
-    this.validators = const [],
+    this.keepValueOnDestroy = true,
     this.secondaryTrackValue,
     this.onChanged,
     this.onChangeStart,
@@ -365,10 +360,12 @@ class JustSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     return JustField<double>(
       name: name,
-      validators: validators,
       initialValue: initialValue ?? min,
-      notifyInternalUpdate: true,
-      saveValueOnDestroy: saveValueOnDestroy,
+      keepValueOnDestroy: keepValueOnDestroy,
+      initialAttributes: initialAttributes,
+      rebuildOnValueChangedInternally: true,
+      rebuildOnValueChanged: true,
+      rebuildOnErrorChanged: false,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
@@ -376,7 +373,7 @@ class JustSlider extends StatelessWidget {
             },
       builder: (context, state) {
         return Slider(
-          value: state.value ?? min,
+          value: state.getValue() ?? min,
           onChanged: (value) {
             state.setValue(value);
           },

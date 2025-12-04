@@ -1,7 +1,4 @@
-import 'dart:convert';
-
-import 'package:flutter/widgets.dart';
-import 'package:just_form/just_form_builder.dart';
+part of '../just_form_builder.dart';
 
 class JustNestedBuilder extends StatefulWidget {
   /// The name of the field. This is used to identify the field in the
@@ -12,11 +9,17 @@ class JustNestedBuilder extends StatefulWidget {
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
   final String name;
-
+  final List<JustValidator> validators;
   final WidgetBuilder builder;
+
+  /// The initial value of the field. This value is ignored when the initial value
+  /// is already set on the [JustFormController] or [JustForm].
+  final Map<String, dynamic> initialValue;
 
   const JustNestedBuilder({
     super.key,
+    this.initialValue = const {},
+    this.validators = const [],
     required this.name,
     required this.builder,
   });
@@ -26,41 +29,73 @@ class JustNestedBuilder extends StatefulWidget {
 }
 
 class _JustNestedBuilderState extends State<JustNestedBuilder> {
+  JustFormController? _parentController;
+  StreamSubscription? _sub;
+
+  JustFieldController<Map<String, dynamic>>? _field;
+
   JustFormController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _parentController = context.justForm;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _parentController = context.justForm;
+  }
+
+  @override
+  void dispose() {
+    _parentController?._fieldInternal(widget.name)?._setSubFormController(null);
+    _controller?.dispose();
+    _sub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return JustField<Map<String, dynamic>>(
       name: widget.name,
-      notifyInternalUpdate: false,
-      notifyError: false,
+      rebuildOnValueChangedInternally: false,
+      rebuildOnErrorChanged: false,
+      rebuildOnAttributeChanged: false,
+      initialValue: widget.initialValue,
       validators: [
         (value) {
-          if (context.justForm
-                  .field(widget.name)
-                  ?.state
-                  .mode
-                  .contains(JustFieldStateMode.validateExternal) ==
-              true) {
-            _controller?.validate();
+          var formController = _parentController
+              ?._fieldInternal(widget.name)
+              ?.getSubForm();
+          if (_field?.getState().internal != true) {
+            formController?.validate();
           }
-
-          var error = _controller?.errors;
-          if (error == null || error.isEmpty) {
-            return null;
-          }
-          return jsonEncode(error);
+          var error = formController?.getErrors();
+          return error == null || error.isEmpty ? null : jsonEncode(error);
         },
       ],
+      onRegistered: (state) {
+        if (state.value != null) {
+          _controller = JustFormController(
+            initialValues: {...widget.initialValue, ...(state.value ?? {})},
+            validators: [],
+          );
 
-      onInitialized: () {
-        _controller = JustFormController(
-          initialValues: context.justForm.field(widget.name)?.state.value ?? {},
-        );
+          _parentController
+              ?._fieldInternal(widget.name)
+              ?._setSubFormController(_controller);
+        }
       },
       builder: (context, state) {
+        _field ??= state;
         return JustFormBuilder(
           controller: _controller,
+          validators: widget.validators,
           onValuesChanged: (value) {
             state.setValue(value);
           },

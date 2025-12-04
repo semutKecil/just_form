@@ -9,7 +9,8 @@ import 'package:just_form/just_form_builder.dart';
 /// - `onChanged`: This is a callback that is called when selection has changed. The value can be null when unselecting a `RawRadio` with `toggleable` set to true.
 /// - `child`: This is the widget that contains the radio buttons.
 /// - `build`: This method builds the widget and returns a `JustField<T>` with a `RadioGroup` as its builder. The `RadioGroup` widget is configured with the parameters passed to the `JustRadioGroup` constructor and the values from the `JustField` state.
-class JustRadioGroup<T> extends StatelessWidget {
+class JustRadioGroup<T> extends StatelessWidget
+    implements JustFieldValidatorAbstract<T> {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
@@ -17,10 +18,12 @@ class JustRadioGroup<T> extends StatelessWidget {
   ///
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
+  @override
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
   /// is already set on the [JustFormController] or [JustForm].
+  @override
   final T? initialValue;
 
   /// A list of validators to check the value of the field against.
@@ -32,15 +35,21 @@ class JustRadioGroup<T> extends StatelessWidget {
   ///
   /// If any of the validators return an error string, the field will be
   /// marked as invalid.
+  @override
   final List<FormFieldValidator<T>> validators;
 
   /// Called when selection has changed.
   ///
   /// The value can be null when unselect the [RawRadio] with
   /// [RawRadio.toggleable] set to true.
+  @override
   final ValueChanged<T?>? onChanged;
 
-  final bool saveValueOnDestroy;
+  @override
+  final bool keepValueOnDestroy;
+
+  @override
+  final Map<String, dynamic> initialAttributes;
 
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
@@ -49,7 +58,8 @@ class JustRadioGroup<T> extends StatelessWidget {
     super.key,
     required this.name,
     required this.child,
-    this.saveValueOnDestroy = true,
+    this.keepValueOnDestroy = true,
+    this.initialAttributes = const {},
     this.initialValue,
     this.validators = const [],
     this.onChanged,
@@ -61,19 +71,20 @@ class JustRadioGroup<T> extends StatelessWidget {
       name: name,
       validators: validators,
       initialValue: initialValue,
-      notifyInternalUpdate: true,
-      saveValueOnDestroy: saveValueOnDestroy,
+      rebuildOnValueChangedInternally: true,
+      keepValueOnDestroy: keepValueOnDestroy,
+      initialAttributes: initialAttributes,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
               onChanged?.call(value);
             },
       builder: (context, state) {
-        return RadioGroup(
+        return RadioGroup<T>(
           onChanged: (value) {
             state.setValue(value);
           },
-          groupValue: state.value,
+          groupValue: state.getValue(),
           child: child,
         );
       },

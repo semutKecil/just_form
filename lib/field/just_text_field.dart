@@ -66,6 +66,8 @@ class JustTextField extends StatefulWidget {
   /// marked as invalid.
   final List<FormFieldValidator<String>> validators;
 
+  final Map<String, dynamic> initialAttributes;
+
   /// The configuration for the magnifier of this text field.
   ///
   /// By default, builds a [CupertinoTextMagnifier] on iOS and [TextMagnifier]
@@ -263,7 +265,7 @@ class JustTextField extends StatefulWidget {
   ///    which are more specialized input change notifications.
   final ValueChanged<String>? onChanged;
 
-  final bool saveValueOnDestroy;
+  final bool keepValueOnDestroy;
 
   /// {@macro flutter.widgets.editableText.onEditingComplete}
   final VoidCallback? onEditingComplete;
@@ -575,8 +577,9 @@ class JustTextField extends StatefulWidget {
     super.key,
     this.initialValue,
     required this.name,
-    this.saveValueOnDestroy = true,
+    this.keepValueOnDestroy = true,
     this.validators = const [],
+    this.initialAttributes = const {},
     this.groupId = EditableText,
     this.focusNode,
     this.decoration = const InputDecoration(),
@@ -682,9 +685,6 @@ class _JustTextFieldState extends State<JustTextField> {
       _focusNode = widget.focusNode!;
       _ownFocusNode = false;
     }
-    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-
-    // });
   }
 
   /// Cleans up resources when the widget is removed.
@@ -697,6 +697,11 @@ class _JustTextFieldState extends State<JustTextField> {
     _controller.dispose();
     if (_ownFocusNode) _focusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   /// Builds the text field widget integrated with the form system.
@@ -717,19 +722,23 @@ class _JustTextFieldState extends State<JustTextField> {
     return JustField<String>(
       name: widget.name,
       initialValue: widget.initialValue,
-      notifyError: true,
-      notifyInternalUpdate: false,
+      rebuildOnValueChanged: true,
+      rebuildOnValueChangedInternally: false,
+      rebuildOnAttributeChanged: true,
+      rebuildOnErrorChanged: true,
       validators: widget.validators,
-      focusNode: _focusNode,
-      saveValueOnDestroy: widget.saveValueOnDestroy,
+      keepValueOnDestroy: widget.keepValueOnDestroy,
+      onAttributeChanged: (attributes, isInternal) {
+        _focusNode.unfocus();
+      },
       onChanged: (value, isInternalUpdate) {
         widget.onChanged?.call(value ?? "");
         if (!isInternalUpdate) {
           _controller.text = value ?? "";
         }
       },
-      onInitialized: () {
-        _controller.text = context.justForm.field(widget.name)?.value ?? '';
+      onRegistered: (state) {
+        _controller.text = state.value ?? "";
       },
       builder: (context, state) {
         return TextFormField(
@@ -737,9 +746,13 @@ class _JustTextFieldState extends State<JustTextField> {
           onChanged: (value) {
             state.setValue(value);
           },
-          forceErrorText: state.error,
+          forceErrorText: state.getError(),
           groupId: widget.groupId,
           focusNode: _focusNode,
+          onTap: widget.onTap,
+          onTapAlwaysCalled: widget.onTapAlwaysCalled,
+          onTapOutside: widget.onTapOutside,
+          onTapUpOutside: widget.onTapUpOutside,
           decoration: state.getAttribute('decoration') ?? widget.decoration,
           keyboardType:
               state.getAttribute('keyboardType') ?? widget.keyboardType,
@@ -822,10 +835,6 @@ class _JustTextFieldState extends State<JustTextField> {
           selectionControls:
               state.getAttribute('selectionControls') ??
               widget.selectionControls,
-          onTap: widget.onTap,
-          onTapAlwaysCalled: widget.onTapAlwaysCalled,
-          onTapOutside: widget.onTapOutside,
-          onTapUpOutside: widget.onTapUpOutside,
           mouseCursor: state.getAttribute('mouseCursor') ?? widget.mouseCursor,
           buildCounter:
               state.getAttribute('buildCounter') ?? widget.buildCounter,

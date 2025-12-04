@@ -35,7 +35,8 @@ import 'package:just_form/just_form_builder.dart';
 /// - `barrierDismissible`: A flag to determine whether tapping outside the dropdown will close it.
 ///
 /// The `build` method of the class returns a `JustField<T>` widget that wraps a `DropdownButton<T>` widget. The `JustField<T>` widget is used to manage the state of the dropdown button, including the value, validation, and change notifications. The `DropdownButton<T>` widget is used to display the dropdown button and handle user interactions.
-class JustDropDownButton<T> extends StatelessWidget {
+class JustDropDownButton<T> extends StatelessWidget
+    implements JustFieldAbstract<T> {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
@@ -43,22 +44,16 @@ class JustDropDownButton<T> extends StatelessWidget {
   ///
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
+  @override
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
   /// is already set on the [JustFormController] or [JustForm].
+  @override
   final T? initialValue;
 
-  /// A list of validators to check the value of the field against.
-  ///
-  /// These validators will be run whenever the value of the field changes.
-  ///
-  /// The validators will be passed the current value of the field and the
-  /// entire form values.
-  ///
-  /// If any of the validators return an error string, the field will be
-  /// marked as invalid.
-  final List<FormFieldValidator<T>> validators;
+  @override
+  final Map<String, dynamic> initialAttributes;
 
   /// The list of items the user can select.
   ///
@@ -92,9 +87,11 @@ class JustDropDownButton<T> extends StatelessWidget {
   /// If [DropdownButton.disabledHint] is also null but [DropdownButton.hint] is
   /// non-null, [DropdownButton.hint] will instead be displayed.
   /// {@endtemplate}
+  @override
   final ValueChanged<T?>? onChanged;
 
-  final bool saveValueOnDestroy;
+  @override
+  final bool keepValueOnDestroy;
 
   /// Called when the dropdown button is tapped.
   ///
@@ -285,8 +282,8 @@ class JustDropDownButton<T> extends StatelessWidget {
     super.key,
     required this.name,
     this.initialValue,
-    this.validators = const [],
-    this.saveValueOnDestroy = true,
+    this.keepValueOnDestroy = true,
+    this.initialAttributes = const {},
     required this.items,
     this.selectedItemBuilder,
     this.hint,
@@ -320,10 +317,11 @@ class JustDropDownButton<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return JustField<T>(
       name: name,
-      validators: validators,
       initialValue: initialValue,
-      notifyInternalUpdate: true,
-      saveValueOnDestroy: saveValueOnDestroy,
+      rebuildOnValueChangedInternally: true,
+      rebuildOnErrorChanged: false,
+      initialAttributes: initialAttributes,
+      keepValueOnDestroy: keepValueOnDestroy,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
@@ -332,7 +330,7 @@ class JustDropDownButton<T> extends StatelessWidget {
       builder: (context, state) {
         return DropdownButton<T>(
           items: items,
-          value: state.value,
+          value: state.getValue(),
           onChanged: (value) {
             state.setValue(value);
           },

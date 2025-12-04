@@ -1,35 +1,53 @@
 part of 'just_form_builder.dart';
 
+abstract class JustFieldValidatorAbstract<T> extends JustFieldAbstract<T> {
+  List<FormFieldValidator<T>> get validators;
+}
+
+abstract class JustFieldAbstract<T> {
+  String get name;
+  T? get initialValue;
+  bool get keepValueOnDestroy;
+  Map<String, dynamic> get initialAttributes;
+  ValueChanged<T>? get onChanged;
+}
+
 class JustField<T> extends StatefulWidget {
+  final Widget Function(BuildContext context, JustFieldController<T> state)
+  builder;
   final String name;
   final T? initialValue;
-  final Widget Function(
-    BuildContext context,
-    JustFieldInternalController<T> state,
-  )
-  builder;
-  final VoidCallback? onInitialized;
-  final bool notifyError;
-  final bool notifyInternalUpdate;
   final List<FormFieldValidator<T>> validators;
-  final bool Function(T a, T b)? isEqual;
-  final void Function(T? value, bool isInternalUpdate)? onChanged;
-  final FocusNode? focusNode;
-  final bool saveValueOnDestroy;
+  final void Function(JustFieldState<T> state)? onRegistered;
+  final void Function(T? value, bool isInternal)? onChanged;
+  final void Function(String? error, bool isInternal)? onErrorChanged;
+  final void Function(Map<String, dynamic> attributes, bool isInternal)?
+  onAttributeChanged;
+  final bool keepValueOnDestroy;
+  final bool rebuildOnValueChanged;
+  final bool rebuildOnValueChangedInternally;
+  final bool rebuildOnAttributeChanged;
+  final bool rebuildOnErrorChanged;
+  final List<String> dontRebuildOnAttributes;
+  final Map<String, dynamic> initialAttributes;
 
   const JustField({
     super.key,
     required this.name,
     required this.builder,
     this.initialValue,
-    this.notifyError = true,
-    this.notifyInternalUpdate = false,
     this.validators = const [],
-    this.isEqual,
     this.onChanged,
-    this.onInitialized,
-    this.focusNode,
-    this.saveValueOnDestroy = true,
+    this.onErrorChanged,
+    this.onAttributeChanged,
+    this.onRegistered,
+    this.keepValueOnDestroy = true,
+    this.rebuildOnValueChanged = true,
+    this.rebuildOnValueChangedInternally = false,
+    this.rebuildOnAttributeChanged = true,
+    this.rebuildOnErrorChanged = true,
+    this.dontRebuildOnAttributes = const [],
+    this.initialAttributes = const {},
   });
 
   @override
@@ -37,107 +55,131 @@ class JustField<T> extends StatefulWidget {
 }
 
 class _JustFieldState<T> extends State<JustField<T>> {
-  late final JustFieldController<T> _fieldController;
+  late final Future<JustFieldController<T>> _fieldController;
   late final JustFormController _formController;
-  StreamSubscription? _sub;
 
   @override
   void initState() {
     super.initState();
     _formController = context.justForm;
-    _fieldController = _formController._register(
-      JustFieldState<T>(
-        name: widget.name,
-        value: widget.initialValue,
-        validators: widget.validators,
-        isEqual: widget.isEqual,
-        focusNode: widget.focusNode,
-        attributes: {},
-        touched: false,
-        mode: [JustFieldStateMode.none],
+    Completer<JustFieldController<T>> completer = Completer();
+    _fieldController = completer.future;
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      var ctrl = await _formController._register<T>(
+        widget.name,
         initialValue: widget.initialValue,
-        error: null,
-      ),
-    );
-    widget.onInitialized?.call();
+        validators: widget.validators,
+        keepValueOnDestroy: widget.keepValueOnDestroy,
+        initialAttributes: widget.initialAttributes,
+      );
 
-    if (widget.onChanged != null) {
-      _sub = _fieldController.stream.listen((event) {
-        if (event.mode.contains(JustFieldStateMode.update)) {
-          widget.onChanged?.call(event.value, false);
-        } else if (event.mode.contains(JustFieldStateMode.updateInternal)) {
-          widget.onChanged?.call(event.value, true);
-        }
-      });
+      widget.onRegistered?.call(ctrl.getState());
+
+      // widget.onInitialized?.call(ctrl.state);
+
+      if (widget.onChanged != null ||
+          widget.onAttributeChanged != null ||
+          widget.onErrorChanged != null) {
+        ctrl.addListener(_onStateChange);
+      }
+      completer.complete(ctrl);
+    });
+  }
+
+  void _onStateChange(JustFieldState<T> from, JustFieldState<T> to) {
+    if (widget.onChanged != null && from.value != to.value) {
+      widget.onChanged?.call(to.value, to.internal);
+    }
+
+    if (widget.onErrorChanged != null && from.error != to.error) {
+      widget.onErrorChanged?.call(to.error, to.internal);
+    }
+
+    if (widget.onAttributeChanged != null &&
+        !mapEquals(from.attributes, to.attributes)) {
+      widget.onAttributeChanged?.call(to.attributes, to.internal);
     }
   }
 
   @override
   void dispose() {
-    _formController._remove(widget.name, widget.saveValueOnDestroy);
-    _sub?.cancel();
+    if (widget.onChanged != null ||
+        widget.onAttributeChanged != null ||
+        widget.onErrorChanged != null) {
+      _fieldController.then((value) => value.removeListener(_onStateChange));
+    }
+
+    _formController._unRegister(widget.name, hard: !widget.keepValueOnDestroy);
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JustFormController, Map<String, JustRegisteredField>>(
-      buildWhen: (previous, current) {
-        current.entries
-                .where((e) => e.value.controller != null)
-                .map((e) => e.key)
-                .contains(widget.name) !=
-            previous.entries
-                .where((e) => e.value.controller != null)
-                .map((e) => e.key)
-                .contains(widget.name);
-        return false;
-      },
+    return BlocBuilder<JustFormController, Map<String, JustFieldData>>(
+      buildWhen: (previous, current) =>
+          current.containsKey(widget.name) != previous.containsKey(widget.name),
       builder: (context, state) {
-        if (!state.entries
-            .where((e) => e.value.controller != null)
-            .map((e) => e.key)
-            .contains(widget.name)) {
+        if (state.containsKey(widget.name) == false) {
           return SizedBox.shrink();
         }
 
-        return BlocBuilder<JustFieldController<T>, JustFieldState<T>>(
-          bloc: _fieldController,
-          buildWhen: (previous, current) {
-            for (var mode in current.mode) {
-              switch (mode) {
-                case JustFieldStateMode.update:
-                  if (!current.valueEqualWith(previous.value)) {
-                    return true;
-                  }
-                  break;
-                case JustFieldStateMode.updateInternal:
-                  if (widget.notifyInternalUpdate &&
-                      !current.valueEqualWith(previous.value)) {
-                    return true;
-                  }
-                  break;
-                case JustFieldStateMode.error:
-                  if (widget.notifyError && current.error != previous.error) {
-                    return true;
-                  }
-                  break;
-                case JustFieldStateMode.attribute:
-                  return true;
-                case JustFieldStateMode.none:
-                case JustFieldStateMode.initialization:
-                case JustFieldStateMode.validateExternal:
-                  break;
-              }
-            }
-            return false;
-          },
-          builder: (context, state) {
-            try {
-              return widget.builder(context, _fieldController._internal);
-            } catch (e) {
-              throw ("${widget.name} : Field builder error", e);
-            }
+        return FutureBuilder(
+          future: _fieldController,
+          builder: (context, snapshot) {
+            return (snapshot.connectionState == ConnectionState.done &&
+                    snapshot.data != null)
+                ? BlocBuilder<JustFieldData<T>, JustFieldState<T>>(
+                    bloc:
+                        context.read<JustFormController>().state[widget.name]
+                            as JustFieldData<T>,
+                    buildWhen: (previous, current) {
+                      if (widget.rebuildOnAttributeChanged) {
+                        if (!mapEquals(
+                          (Map.from(previous.attributes)..removeWhere((
+                            key,
+                            value,
+                          ) {
+                            return widget.dontRebuildOnAttributes.contains(key);
+                          })),
+                          (Map.from(current.attributes)..removeWhere((
+                            key,
+                            value,
+                          ) {
+                            return widget.dontRebuildOnAttributes.contains(key);
+                          })),
+                        )) {
+                          return true;
+                        }
+                      }
+
+                      if (widget.rebuildOnValueChanged &&
+                          previous.value != current.value &&
+                          !current.internal) {
+                        return true;
+                      }
+
+                      if (widget.rebuildOnValueChangedInternally &&
+                          previous.value != current.value &&
+                          current.internal) {
+                        return true;
+                      }
+
+                      if (widget.rebuildOnErrorChanged &&
+                          previous.error != current.error) {
+                        return true;
+                      }
+                      return false;
+                    },
+                    builder: (context, state) {
+                      try {
+                        return widget.builder(context, snapshot.data!);
+                      } catch (e) {
+                        throw ("${widget.name} : Field builder error", e);
+                      }
+                    },
+                  )
+                : SizedBox.shrink();
           },
         );
       },

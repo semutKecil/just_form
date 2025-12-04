@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_form/debouncer.dart';
+import 'package:just_form/just_field_state.dart';
 import 'package:just_form/just_validator.dart';
 part 'just_form_controller.dart';
-part 'just_field_state.dart';
 part 'just_field.dart';
 part 'just_field_controller.dart';
+part 'field/just_nested_builder.dart';
+part 'just_field_data.dart';
 
 class JustFormBuilder extends StatefulWidget {
   final WidgetBuilder builder;
@@ -37,28 +41,27 @@ class _JustFormBuilderState extends State<JustFormBuilder> {
 
   @override
   void initState() {
+    super.initState();
     if (widget.controller == null) {
       _ownController = true;
       _controller = JustFormController(
         initialValues: widget.initialValues ?? {},
+        validators: widget.validators,
       );
     } else {
       _controller = widget.controller!;
     }
-
-    _controller.validators.addAll(widget.validators);
 
     if (widget.onValuesChanged != null) {
       _controller.addValuesChangedListener(widget.onValuesChanged!);
     }
 
     if (widget.onErrorsChanged != null) {
-      _controller.addErrorChangedListener(widget.onErrorsChanged!);
+      _controller.addErrorsChangedListener(widget.onErrorsChanged!);
     }
 
-    super.initState();
     // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-    //   print("form are rendered");
+    //   _controller._formRenrederedComplete();
     // });
   }
 
@@ -69,10 +72,13 @@ class _JustFormBuilderState extends State<JustFormBuilder> {
     }
 
     if (widget.onErrorsChanged != null) {
-      _controller.removeErrorChangedListener(widget.onErrorsChanged!);
+      _controller.removeErrorsChangedListener(widget.onErrorsChanged!);
     }
 
-    if (_ownController) _controller.dispose();
+    if (_ownController) {
+      _controller.dispose();
+    }
+
     super.dispose();
   }
 

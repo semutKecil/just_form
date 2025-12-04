@@ -5,11 +5,11 @@ import 'package:just_form/just_form_builder.dart';
 /// This class, `JustSwitchListTile`, is a stateless widget in Flutter that provides a switch list tile for a form. Here's a summary of what each method does:
 /// - `name`: The name of the field in the form. This is required for validation.
 /// - `initialValue`: The initial value of the field. This value is ignored if it's already set in the `JustFormController` or `JustForm`.
-/// - `validators`: A list of validators to check the value of the field against.
 /// - `onChanged`: A callback function that is called when the user toggles the switch on or off.
 /// - `activeThumbColor`, `activeTrackColor`, `inactiveThumbColor`, `inactiveTrackColor`, `activeThumbImage`, `onActiveThumbImageError`, `inactiveThumbImage`, `onInactiveThumbImageError`, `materialTapTargetSize`, `dragStartBehavior`, `mouseCursor`, `splashRadius`, `focusNode`, `onFocusChange`, `autofocus`, `tileColor`, `title`, `subtitle`, `isThreeLine`, `dense`, `contentPadding`, `secondary`, `selected`, `controlAffinity`, `shape`, `selectedTileColor`, `visualDensity`, `enableFeedback`, `hoverColor`, `internalAddSemanticForOnTap`: These are optional parameters that customize the appearance and behavior of the switch list tile.
 /// - `build(BuildContext context)`: This method builds the widget and returns a `JustField<bool>` with a `SwitchListTile` as its builder. The `SwitchListTile` widget is configured with the parameters passed to the `JustSwitchListTile` constructor and the values from the `JustField` state.
-class JustSwitchListTile extends StatelessWidget {
+class JustSwitchListTile extends StatelessWidget
+    implements JustFieldAbstract<bool> {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
@@ -17,22 +17,13 @@ class JustSwitchListTile extends StatelessWidget {
   ///
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
+  @override
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
   /// is already set on the [JustFormController] or [JustForm].
+  @override
   final bool? initialValue;
-
-  /// A list of validators to check the value of the field against.
-  ///
-  /// These validators will be run whenever the value of the field changes.
-  ///
-  /// The validators will be passed the current value of the field and the
-  /// entire form values.
-  ///
-  /// If any of the validators return an error string, the field will be
-  /// marked as invalid.
-  final List<FormFieldValidator<bool>> validators;
 
   /// Called when the user toggles the switch on or off.
   ///
@@ -59,9 +50,14 @@ class JustSwitchListTile extends StatelessWidget {
   /// )
   /// ```
   /// {@end-tool}
+  @override
   final ValueChanged<bool>? onChanged;
 
-  final bool saveValueOnDestroy;
+  @override
+  final bool keepValueOnDestroy;
+
+  @override
+  final Map<String, dynamic> initialAttributes;
 
   /// {@macro flutter.material.switch.activeThumbColor}
   ///
@@ -225,8 +221,8 @@ class JustSwitchListTile extends StatelessWidget {
 
     required this.name,
     this.initialValue,
-    this.saveValueOnDestroy = true,
-    this.validators = const [],
+    this.keepValueOnDestroy = true,
+    this.initialAttributes = const {},
     this.onChanged,
     this.activeThumbColor,
     this.activeTrackColor,
@@ -265,9 +261,11 @@ class JustSwitchListTile extends StatelessWidget {
     return JustField<bool>(
       name: name,
       initialValue: initialValue ?? false,
-      validators: validators,
-      notifyInternalUpdate: true,
-      saveValueOnDestroy: saveValueOnDestroy,
+      rebuildOnValueChangedInternally: true,
+      rebuildOnValueChanged: true,
+      rebuildOnErrorChanged: false,
+      keepValueOnDestroy: keepValueOnDestroy,
+      initialAttributes: initialAttributes,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
@@ -275,7 +273,7 @@ class JustSwitchListTile extends StatelessWidget {
             },
       builder: (context, state) {
         return SwitchListTile(
-          value: state.value ?? false,
+          value: state.getValue() ?? false,
           onChanged: (value) {
             state.setValue(value);
           },

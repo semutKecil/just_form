@@ -39,7 +39,8 @@ import 'package:just_form/just_form_builder.dart';
 /// - `internalAddSemanticForOnTap`: Whether to add button:true to the semantics if onTap is provided. This is a temporary flag to help changing the behavior of ListTile onTap semantics.
 ///
 /// The `build` method builds the widget and returns a `JustField<bool>` with a `CheckboxListTile` as its builder. The `CheckboxListTile` widget is configured with the parameters passed to the `JustCheckboxListTile` constructor and the values from the `JustField` state.
-class JustCheckboxListTile extends StatelessWidget {
+class JustCheckboxListTile extends StatelessWidget
+    implements JustFieldAbstract<bool> {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
@@ -47,22 +48,13 @@ class JustCheckboxListTile extends StatelessWidget {
   ///
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
+  @override
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
   /// is already set on the [JustFormController] or [JustForm].
+  @override
   final bool? initialValue;
-
-  /// A list of validators to check the value of the field against.
-  ///
-  /// These validators will be run whenever the value of the field changes.
-  ///
-  /// The validators will be passed the current value of the field and the
-  /// entire form values.
-  ///
-  /// If any of the validators return an error string, the field will be
-  /// marked as invalid.
-  final List<FormFieldValidator<bool>> validators;
 
   /// Called when the value of the checkbox should change.
   ///
@@ -90,9 +82,14 @@ class JustCheckboxListTile extends StatelessWidget {
   /// )
   /// ```
   /// {@end-tool}
+  @override
   final ValueChanged<bool?>? onChanged;
 
-  final bool saveValueOnDestroy;
+  @override
+  final bool keepValueOnDestroy;
+
+  @override
+  final Map<String, dynamic> initialAttributes; // ignore: public_member_api_docs>
 
   /// The cursor for a mouse pointer when it enters or is hovering over the
   /// widget.
@@ -281,9 +278,9 @@ class JustCheckboxListTile extends StatelessWidget {
     super.key,
     required this.name,
     this.initialValue,
-    this.validators = const [],
     this.onChanged,
-    this.saveValueOnDestroy = true,
+    this.keepValueOnDestroy = true,
+    this.initialAttributes = const {},
     this.mouseCursor,
     this.activeColor,
     this.checkColor,
@@ -321,10 +318,10 @@ class JustCheckboxListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return JustField<bool>(
       name: name,
-      validators: validators,
       initialValue: tristate ? initialValue : initialValue ?? false,
-      notifyInternalUpdate: true,
-      saveValueOnDestroy: saveValueOnDestroy,
+      rebuildOnValueChangedInternally: true,
+      keepValueOnDestroy: true,
+      rebuildOnErrorChanged: false,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
@@ -333,8 +330,8 @@ class JustCheckboxListTile extends StatelessWidget {
       builder: (context, state) {
         return CheckboxListTile(
           value: (state.getAttribute('tristate') ?? tristate)
-              ? state.value
-              : state.value ?? false,
+              ? state.getValue()
+              : state.getValue() ?? false,
           onChanged: (value) {
             state.setValue(value);
           },

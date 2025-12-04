@@ -17,7 +17,8 @@ import 'package:just_form/just_form_builder.dart';
 /// - `padding`: This determines the padding around the slider.
 ///
 /// The `build` method builds the widget and returns a `JustField<RangeValues>` with a `RangeSlider` as its builder. The `RangeSlider` widget is configured with the parameters passed to the `JustRangeSlider` constructor and the values from the `JustField` state.
-class JustRangeSlider extends StatelessWidget {
+class JustRangeSlider extends StatelessWidget
+    implements JustFieldAbstract<RangeValues> {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
@@ -25,22 +26,13 @@ class JustRangeSlider extends StatelessWidget {
   ///
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
+  @override
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
   /// is already set on the [JustFormController] or [JustForm].
+  @override
   final RangeValues? initialValue;
-
-  /// A list of validators to check the value of the field against.
-  ///
-  /// These validators will be run whenever the value of the field changes.
-  ///
-  /// The validators will be passed the current value of the field and the
-  /// entire form values.
-  ///
-  /// If any of the validators return an error string, the field will be
-  /// marked as invalid.
-  final List<FormFieldValidator<RangeValues>> validators;
 
   /// Called when the user is selecting a new value for the slider by dragging.
   ///
@@ -75,9 +67,14 @@ class JustRangeSlider extends StatelessWidget {
   ///  * [onChangeStart], which is called when the user starts changing the
   ///    values.
   ///  * [onChangeEnd], which is called when the user stops changing the values.
+  @override
   final ValueChanged<RangeValues>? onChanged;
 
-  final bool saveValueOnDestroy;
+  @override
+  final bool keepValueOnDestroy;
+
+  @override
+  final Map<String, dynamic> initialAttributes;
 
   /// Called when the user starts selecting new values for the slider.
   ///
@@ -250,8 +247,8 @@ class JustRangeSlider extends StatelessWidget {
     super.key,
     required this.name,
     this.initialValue,
-    this.saveValueOnDestroy = true,
-    this.validators = const [],
+    this.keepValueOnDestroy = true,
+    this.initialAttributes = const {},
     this.onChanged,
     this.onChangeStart,
     this.onChangeEnd,
@@ -270,9 +267,9 @@ class JustRangeSlider extends StatelessWidget {
     return JustField<RangeValues>(
       name: name,
       initialValue: initialValue,
-      validators: validators,
-      notifyInternalUpdate: true,
-      saveValueOnDestroy: saveValueOnDestroy,
+      rebuildOnValueChangedInternally: true,
+      keepValueOnDestroy: keepValueOnDestroy,
+      initialAttributes: initialAttributes,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
@@ -280,7 +277,7 @@ class JustRangeSlider extends StatelessWidget {
             },
       builder: (context, state) {
         return RangeSlider(
-          values: state.value ?? RangeValues(min, max),
+          values: state.getValue() ?? RangeValues(min, max),
           onChanged: (value) {
             state.setValue(value);
           },

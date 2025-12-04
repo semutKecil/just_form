@@ -24,7 +24,7 @@ import 'package:just_form/just_form_builder.dart';
 /// - `semanticLabel`: The semantic label for the checkbox that will be announced by screen readers.
 ///
 /// The `build` method builds the widget and returns a `JustField<bool>` with a `Checkbox` as its builder. The `Checkbox` widget is configured with the parameters passed to the `JustCheckbox` constructor and the values from the `JustField` state.
-class JustCheckbox extends StatelessWidget {
+class JustCheckbox extends StatelessWidget implements JustFieldAbstract<bool> {
   /// The name of the field. This is used to identify the field in the
   /// [JustFormController].
   ///
@@ -32,22 +32,13 @@ class JustCheckbox extends StatelessWidget {
   ///
   /// The name of the field should be a single word (e.g. "name", "email",
   /// "password").
+  @override
   final String name;
 
   /// The initial value of the field. This value is ignored when the initial value
   /// is already set on the [JustFormController] or [JustForm].
+  @override
   final bool? initialValue;
-
-  /// A list of validators to check the value of the field against.
-  ///
-  /// These validators will be run whenever the value of the field changes.
-  ///
-  /// The validators will be passed the current value of the field and the
-  /// entire form values.
-  ///
-  /// If any of the validators return an error string, the field will be
-  /// marked as invalid.
-  final List<FormFieldValidator<bool>> validators;
 
   /// Called when the value of the checkbox should change.
   ///
@@ -76,9 +67,14 @@ class JustCheckbox extends StatelessWidget {
   ///   },
   /// )
   /// ```
+  @override
   final ValueChanged<bool?>? onChanged;
 
-  final bool saveValueOnDestroy;
+  @override
+  final bool keepValueOnDestroy;
+
+  @override
+  final Map<String, dynamic> initialAttributes;
 
   /// {@template flutter.material.checkbox.mouseCursor}
   /// The cursor for a mouse pointer when it enters or is hovering over the
@@ -253,10 +249,10 @@ class JustCheckbox extends StatelessWidget {
   const JustCheckbox({
     super.key,
     this.initialValue,
-    this.validators = const [],
     required this.name,
     this.onChanged,
-    this.saveValueOnDestroy = true,
+    this.initialAttributes = const {},
+    this.keepValueOnDestroy = true,
     this.tristate = false,
     this.mouseCursor,
     this.activeColor,
@@ -279,10 +275,10 @@ class JustCheckbox extends StatelessWidget {
     return JustField<bool>(
       name: name,
       initialValue: tristate ? initialValue : initialValue ?? false,
-      notifyError: false,
-      notifyInternalUpdate: true,
-      validators: validators,
-      saveValueOnDestroy: saveValueOnDestroy,
+      rebuildOnErrorChanged: false,
+      rebuildOnValueChangedInternally: true,
+      keepValueOnDestroy: keepValueOnDestroy,
+      initialAttributes: initialAttributes,
       onChanged: onChanged == null
           ? null
           : (value, isInternalUpdate) {
@@ -291,8 +287,8 @@ class JustCheckbox extends StatelessWidget {
       builder: (context, state) {
         return Checkbox(
           value: (state.getAttribute('tristate') ?? tristate)
-              ? state.value
-              : state.value ?? false,
+              ? state.getValue()
+              : state.getValue() ?? false,
           onChanged: (value) {
             state.setValue(value);
           },

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:just_form/just_field_state.dart';
 import 'package:just_form/just_form_builder.dart';
 
 class JustBuilderFields {
@@ -14,44 +16,33 @@ class JustBuilderFields {
 }
 
 class JustBuilder extends StatelessWidget {
-  final JustBuilderFields fields;
-  final bool notifyError;
-  final bool notifyValueUpdate;
-  final bool notifyAttributeUpdate;
-  final Widget Function(BuildContext context, JustFormController state) builder;
+  final List<String> fields;
+  final bool allFields;
+  final Widget Function(
+    BuildContext context,
+    Map<String, JustFieldController> state,
+  )
+  builder;
+  final bool rebuildOnValueChanged;
+  final bool rebuildOnAttributeChanged;
+  final bool rebuildOnErrorChanged;
 
   const JustBuilder({
     super.key,
-    required this.fields,
-    this.notifyValueUpdate = false,
-    this.notifyError = false,
-    this.notifyAttributeUpdate = false,
+    this.fields = const [],
+    this.allFields = false,
+    this.rebuildOnValueChanged = true,
+    this.rebuildOnAttributeChanged = false,
+    this.rebuildOnErrorChanged = false,
     required this.builder,
   });
 
   bool _buildFieldWhen(JustFieldState previous, JustFieldState current) {
-    for (var mode in current.mode) {
-      switch (mode) {
-        case JustFieldStateMode.update:
-        case JustFieldStateMode.updateInternal:
-          if (notifyValueUpdate && !current.valueEqualWith(previous.value)) {
-            return true;
-          }
-          break;
-        case JustFieldStateMode.error:
-          if (notifyError && current.error != previous.error) {
-            return true;
-          }
-          break;
-        case JustFieldStateMode.attribute:
-          if (notifyAttributeUpdate) {
-            return true;
-          }
-        case JustFieldStateMode.none:
-        case JustFieldStateMode.initialization:
-        case JustFieldStateMode.validateExternal:
-          break;
-      }
+    if (rebuildOnValueChanged && current.value != previous.value) return true;
+    if (rebuildOnErrorChanged && current.error != previous.error) return true;
+    if (rebuildOnAttributeChanged &&
+        !mapEquals(current.attributes, previous.attributes)) {
+      return true;
     }
 
     return false;
@@ -59,51 +50,25 @@ class JustBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JustFormController, Map<String, JustRegisteredField>>(
+    return BlocBuilder<JustFormController, Map<String, JustFieldData>>(
       buildWhen: (previous, current) {
         if (current.isEmpty) return false;
-        if (fields.all) return true;
-        var bld =
-            current.entries
-                .where((e) => e.value.controller != null)
-                .map((e) => fields.fields.contains(e.key))
-                .contains(true) !=
-            previous.entries
-                .where((e) => e.value.controller != null)
-                .map((e) => fields.fields.contains(e.key))
-                .contains(true);
-        return bld;
+        if (allFields) return true;
+
+        return previous.keys
+                .where((element) => fields.contains(element))
+                .length !=
+            current.keys.where((element) => fields.contains(element)).length;
       },
       builder: (context, state) {
-        if (!fields.all &&
-            !(state.entries
-                .where((e) => e.value.controller != null)
-                .map((e) => fields.fields.contains(e.key))
-                .contains(true))) {
-          return SizedBox.shrink();
-        }
-        var fieldsMonitor = fields.all
-            ? state.entries
-                  .where((element) => element.value.controller != null)
-                  .map((e) => e.key)
-                  .toList()
-            : state.entries
-                  .where(
-                    (element) =>
-                        element.value.controller != null &&
-                        fields.fields.contains(element.key),
-                  )
-                  .map((e) => e.key)
-                  .toList();
+        var fieldsMonitor = allFields
+            ? state.keys.toList()
+            : state.keys.where((element) => fields.contains(element)).toList();
 
         if (fieldsMonitor.isEmpty) return const SizedBox.shrink();
-        // state.values.first.co
-        Widget blocWidget(
-          JustFieldController fieldController,
-          WidgetBuilder builder,
-        ) {
-          return BlocBuilder<JustFieldController, JustFieldState>(
-            bloc: fieldController,
+        Widget blocWidget(JustFieldData fieldCubit, WidgetBuilder builder) {
+          return BlocBuilder<JustFieldData, JustFieldState>(
+            bloc: fieldCubit,
             buildWhen: (previous, current) =>
                 _buildFieldWhen(previous, current),
             builder: (context, state) {
@@ -117,11 +82,11 @@ class JustBuilder extends StatelessWidget {
 
         for (var field in fieldsMonitor.reversed) {
           if (i == 0) {
-            content = blocWidget(state[field]!.controller!, (context) {
-              return builder(context, context.justForm);
+            content = blocWidget(state[field]!, (context) {
+              return builder(context, context.justForm.fields());
             });
           } else {
-            content = blocWidget(state[field]!.controller!, (context) {
+            content = blocWidget(state[field]!, (context) {
               return content!;
             });
           }
