@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$JustFieldState<T> {
 
- String get name; bool get internal; T? get value; String? get error; bool get active; Map<String, dynamic> get attributes;
+ String get name; bool get internal; DateTime get updateTime; T? get value; String? get error; bool get active; Map<String, dynamic> get attributes;
 /// Create a copy of JustFieldState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $JustFieldStateCopyWith<T, JustFieldState<T>> get copyWith => _$JustFieldStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is JustFieldState<T>&&(identical(other.name, name) || other.name == name)&&(identical(other.internal, internal) || other.internal == internal)&&const DeepCollectionEquality().equals(other.value, value)&&(identical(other.error, error) || other.error == error)&&(identical(other.active, active) || other.active == active)&&const DeepCollectionEquality().equals(other.attributes, attributes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JustFieldState<T>&&(identical(other.name, name) || other.name == name)&&(identical(other.internal, internal) || other.internal == internal)&&(identical(other.updateTime, updateTime) || other.updateTime == updateTime)&&const DeepCollectionEquality().equals(other.value, value)&&(identical(other.error, error) || other.error == error)&&(identical(other.active, active) || other.active == active)&&const DeepCollectionEquality().equals(other.attributes, attributes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,internal,const DeepCollectionEquality().hash(value),error,active,const DeepCollectionEquality().hash(attributes));
+int get hashCode => Object.hash(runtimeType,name,internal,updateTime,const DeepCollectionEquality().hash(value),error,active,const DeepCollectionEquality().hash(attributes));
 
 @override
 String toString() {
-  return 'JustFieldState<$T>(name: $name, internal: $internal, value: $value, error: $error, active: $active, attributes: $attributes)';
+  return 'JustFieldState<$T>(name: $name, internal: $internal, updateTime: $updateTime, value: $value, error: $error, active: $active, attributes: $attributes)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $JustFieldStateCopyWith<T,$Res>  {
   factory $JustFieldStateCopyWith(JustFieldState<T> value, $Res Function(JustFieldState<T>) _then) = _$JustFieldStateCopyWithImpl;
 @useResult
 $Res call({
- String name, bool internal, T? value, String? error, bool active, Map<String, dynamic> attributes
+ String name, bool internal, DateTime updateTime, T? value, String? error, bool active, Map<String, dynamic> attributes
 });
 
 
@@ -62,11 +62,12 @@ class _$JustFieldStateCopyWithImpl<T,$Res>
 
 /// Create a copy of JustFieldState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? internal = null,Object? value = freezed,Object? error = freezed,Object? active = null,Object? attributes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? internal = null,Object? updateTime = null,Object? value = freezed,Object? error = freezed,Object? active = null,Object? attributes = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,internal: null == internal ? _self.internal : internal // ignore: cast_nullable_to_non_nullable
-as bool,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as bool,updateTime: null == updateTime ? _self.updateTime : updateTime // ignore: cast_nullable_to_non_nullable
+as DateTime,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as T?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
 as bool,attributes: null == attributes ? _self.attributes : attributes // ignore: cast_nullable_to_non_nullable
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  bool internal,  T? value,  String? error,  bool active,  Map<String, dynamic> attributes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  bool internal,  DateTime updateTime,  T? value,  String? error,  bool active,  Map<String, dynamic> attributes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _JustFieldState() when $default != null:
-return $default(_that.name,_that.internal,_that.value,_that.error,_that.active,_that.attributes);case _:
+return $default(_that.name,_that.internal,_that.updateTime,_that.value,_that.error,_that.active,_that.attributes);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.name,_that.internal,_that.value,_that.error,_that.active,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  bool internal,  T? value,  String? error,  bool active,  Map<String, dynamic> attributes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  bool internal,  DateTime updateTime,  T? value,  String? error,  bool active,  Map<String, dynamic> attributes)  $default,) {final _that = this;
 switch (_that) {
 case _JustFieldState():
-return $default(_that.name,_that.internal,_that.value,_that.error,_that.active,_that.attributes);case _:
+return $default(_that.name,_that.internal,_that.updateTime,_that.value,_that.error,_that.active,_that.attributes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +197,10 @@ return $default(_that.name,_that.internal,_that.value,_that.error,_that.active,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  bool internal,  T? value,  String? error,  bool active,  Map<String, dynamic> attributes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  bool internal,  DateTime updateTime,  T? value,  String? error,  bool active,  Map<String, dynamic> attributes)?  $default,) {final _that = this;
 switch (_that) {
 case _JustFieldState() when $default != null:
-return $default(_that.name,_that.internal,_that.value,_that.error,_that.active,_that.attributes);case _:
+return $default(_that.name,_that.internal,_that.updateTime,_that.value,_that.error,_that.active,_that.attributes);case _:
   return null;
 
 }
@@ -211,11 +212,12 @@ return $default(_that.name,_that.internal,_that.value,_that.error,_that.active,_
 
 
 class _JustFieldState<T> implements JustFieldState<T> {
-  const _JustFieldState({required this.name, required this.internal, this.value, this.error, this.active = true, final  Map<String, dynamic> attributes = const {}}): _attributes = attributes;
+  const _JustFieldState({required this.name, required this.internal, required this.updateTime, this.value, this.error, this.active = true, final  Map<String, dynamic> attributes = const {}}): _attributes = attributes;
   
 
 @override final  String name;
 @override final  bool internal;
+@override final  DateTime updateTime;
 @override final  T? value;
 @override final  String? error;
 @override@JsonKey() final  bool active;
@@ -237,16 +239,16 @@ _$JustFieldStateCopyWith<T, _JustFieldState<T>> get copyWith => __$JustFieldStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _JustFieldState<T>&&(identical(other.name, name) || other.name == name)&&(identical(other.internal, internal) || other.internal == internal)&&const DeepCollectionEquality().equals(other.value, value)&&(identical(other.error, error) || other.error == error)&&(identical(other.active, active) || other.active == active)&&const DeepCollectionEquality().equals(other._attributes, _attributes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _JustFieldState<T>&&(identical(other.name, name) || other.name == name)&&(identical(other.internal, internal) || other.internal == internal)&&(identical(other.updateTime, updateTime) || other.updateTime == updateTime)&&const DeepCollectionEquality().equals(other.value, value)&&(identical(other.error, error) || other.error == error)&&(identical(other.active, active) || other.active == active)&&const DeepCollectionEquality().equals(other._attributes, _attributes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,internal,const DeepCollectionEquality().hash(value),error,active,const DeepCollectionEquality().hash(_attributes));
+int get hashCode => Object.hash(runtimeType,name,internal,updateTime,const DeepCollectionEquality().hash(value),error,active,const DeepCollectionEquality().hash(_attributes));
 
 @override
 String toString() {
-  return 'JustFieldState<$T>(name: $name, internal: $internal, value: $value, error: $error, active: $active, attributes: $attributes)';
+  return 'JustFieldState<$T>(name: $name, internal: $internal, updateTime: $updateTime, value: $value, error: $error, active: $active, attributes: $attributes)';
 }
 
 
@@ -257,7 +259,7 @@ abstract mixin class _$JustFieldStateCopyWith<T,$Res> implements $JustFieldState
   factory _$JustFieldStateCopyWith(_JustFieldState<T> value, $Res Function(_JustFieldState<T>) _then) = __$JustFieldStateCopyWithImpl;
 @override @useResult
 $Res call({
- String name, bool internal, T? value, String? error, bool active, Map<String, dynamic> attributes
+ String name, bool internal, DateTime updateTime, T? value, String? error, bool active, Map<String, dynamic> attributes
 });
 
 
@@ -274,11 +276,12 @@ class __$JustFieldStateCopyWithImpl<T,$Res>
 
 /// Create a copy of JustFieldState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? internal = null,Object? value = freezed,Object? error = freezed,Object? active = null,Object? attributes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? internal = null,Object? updateTime = null,Object? value = freezed,Object? error = freezed,Object? active = null,Object? attributes = null,}) {
   return _then(_JustFieldState<T>(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,internal: null == internal ? _self.internal : internal // ignore: cast_nullable_to_non_nullable
-as bool,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as bool,updateTime: null == updateTime ? _self.updateTime : updateTime // ignore: cast_nullable_to_non_nullable
+as DateTime,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as T?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
 as bool,attributes: null == attributes ? _self._attributes : attributes // ignore: cast_nullable_to_non_nullable

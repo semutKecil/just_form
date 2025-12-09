@@ -67,6 +67,10 @@ class JustDateField extends StatefulWidget
   )?
   pickerBuilder;
 
+  final Widget? clearIcon;
+  final bool? withClearButton;
+  final bool enabled;
+
   const JustDateField({
     super.key,
     required this.name,
@@ -85,6 +89,9 @@ class JustDateField extends StatefulWidget
     this.invalidDateErrorText = "Invalid date",
     this.calendarIcon = const Icon(Icons.calendar_month),
     this.pickerBuilder,
+    this.enabled = true,
+    this.clearIcon,
+    this.withClearButton,
   });
 
   @override
@@ -170,6 +177,9 @@ class _JustDateFieldState extends State<JustDateField> {
       validators: widget.validators,
       onChanged: widget.onChanged,
       invalidErrorText: widget.invalidDateErrorText,
+      enabled: widget.enabled,
+      withClearButton: widget.withClearButton,
+      clearIcon: widget.clearIcon,
     );
   }
 }

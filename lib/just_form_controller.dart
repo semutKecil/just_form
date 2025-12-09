@@ -6,6 +6,7 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
 
   final List<ValueChanged<Map<String, dynamic>>> _valuesChangedListeners = [];
   final List<ValueChanged<Map<String, String?>>> _errorsChangedListeners = [];
+  final ValueChanged<Map<String, dynamic>>? onFieldRegistered;
 
   final Debouncer<void> valuesChangedDebouncer = Debouncer(
     delay: Duration(milliseconds: 10),
@@ -17,16 +18,22 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
   JustFormController({
     this.initialValues = const {},
     this.validators = const [],
+    this.onFieldRegistered,
   }) : super({});
 
-  Future<JustFieldController<T>> _register<T>(
+  void _update(Map<String, JustFieldData> newState) {
+    if (!isClosed) {
+      emit(newState);
+    }
+  }
+
+  JustFieldController<T>? _register<T>(
     String name, {
     T? initialValue,
     List<String? Function(T? value)> validators = const [],
     bool keepValueOnDestroy = true,
     Map<String, dynamic> initialAttributes = const {},
-  }) async {
-    // print("register field $name");
+  }) {
     var newState = Map<String, JustFieldData>.from(state);
     var ctrl = newState[name];
     T? value = keepValueOnDestroy
@@ -48,28 +55,31 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
           value: value,
           attributes: initialAttributes,
           active: true,
+          updateTime: DateTime.now(),
         ),
       );
 
       newState[name] = cubit;
+      _update(newState);
 
-      cubit.addListener((from, to) {
-        if (from.value != to.value) {
-          valuesChangedDebouncer.run(() {
-            for (var listener in _valuesChangedListeners) {
-              listener(getValues());
-            }
-          });
-        }
-        if (from.error != to.error) {
-          errorsChangedDebouncer.run(() {
-            for (var listener in _errorsChangedListeners) {
-              listener(_getFieldErrors());
-            }
-          });
-        }
+      Future(() {
+        cubit.addListener((from, to) {
+          if (from.value != to.value) {
+            valuesChangedDebouncer.run(() {
+              for (var listener in _valuesChangedListeners) {
+                listener(getValues());
+              }
+            });
+          }
+          if (from.error != to.error) {
+            errorsChangedDebouncer.run(() {
+              for (var listener in _errorsChangedListeners) {
+                listener(_getFieldErrors());
+              }
+            });
+          }
+        });
       });
-      emit(newState);
     } else {
       ctrl._update(
         ctrl.state.copyWith(
@@ -79,17 +89,18 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
           active: true,
         ),
       );
-      // emit(newState);
     }
 
-    return _fieldInternal<T>(name)!;
+    onFieldRegistered?.call(getValues());
+
+    return _fieldInternal<T>(name);
   }
 
   void _unRegister(String name, {bool hard = false}) {
     if (hard) {
       state[name]?.clearListeners();
       state[name]?.close();
-      emit(Map<String, JustFieldData>.from(state)..remove(name));
+      _update(Map<String, JustFieldData>.from(state)..remove(name));
     } else {
       state[name]?._update(state[name]!.state.copyWith(active: false));
     }
@@ -97,9 +108,7 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
 
   void patchValues(Map<String, dynamic> values) {
     for (var key in values.keys) {
-      print("patch value");
       if (state[key] != null) {
-        print("update has key");
         state[key]?._setValue(values[key]);
       }
     }

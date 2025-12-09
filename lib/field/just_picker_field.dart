@@ -60,6 +60,10 @@ class JustPickerField<T> extends StatefulWidget
   final InputDecoration decoration;
 
   final Widget pickerIcon;
+  final Widget? clearIcon;
+
+  final bool enabled;
+  final bool? withClearButton;
 
   const JustPickerField({
     super.key,
@@ -73,8 +77,11 @@ class JustPickerField<T> extends StatefulWidget
     this.initialValue,
     this.validators = const [],
     this.onChanged,
+    this.enabled = true,
     this.keepValueOnDestroy = true,
     this.initialAttributes = const {},
+    this.withClearButton,
+    this.clearIcon,
     this.decoration = const InputDecoration(),
   });
 
@@ -88,6 +95,20 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
   final Debouncer _invalidValueDebouncer = Debouncer(
     delay: Duration(milliseconds: 300),
   );
+
+  late final bool _withClearButton;
+
+  @override
+  void initState() {
+    if (widget.withClearButton == null) {
+      _withClearButton = !widget.freeText;
+    } else {
+      _withClearButton = widget.withClearButton!;
+    }
+    super.initState();
+  }
+
+  @override
   void dispose() {
     _invalidValueDebouncer.cancel();
     _controller.dispose();
@@ -142,8 +163,9 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
           controller: _controller,
           readOnly: !widget.freeText,
           focusNode: _focusNode,
+          enabled: state.getAttribute<bool>('enabled') ?? widget.enabled,
           mouseCursor: widget.freeText ? null : SystemMouseCursors.click,
-          onTap: widget.freeText
+          onTap: widget.freeText || !widget.enabled
               ? null
               : () async {
                   await _showPicker(context, state);
@@ -182,12 +204,35 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
               (state.getAttribute<InputDecoration>('decoration') ??
                       widget.decoration)
                   .copyWith(
-                    suffixIcon: IconButton(
-                      onPressed: () async {
-                        await _showPicker(context, state);
-                      },
-                      icon:
-                          state.getAttribute('pickerIcon') ?? widget.pickerIcon,
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _withClearButton
+                            ? Padding(
+                                padding: const EdgeInsets.only(right: 5),
+                                child: IconButton(
+                                  onPressed: () {
+                                    state.setValue(null);
+                                    _controller.text = "";
+                                  },
+                                  icon:
+                                      state.getAttribute<Widget>('clearIcon') ??
+                                      widget.clearIcon ??
+                                      const Icon(Icons.close),
+                                ),
+                              )
+                            : SizedBox.shrink(),
+                        IconButton(
+                          onPressed: widget.enabled
+                              ? () async {
+                                  await _showPicker(context, state);
+                                }
+                              : null,
+                          icon:
+                              state.getAttribute<Widget>('pickerIcon') ??
+                              widget.pickerIcon,
+                        ),
+                      ],
                     ),
                   ),
         );

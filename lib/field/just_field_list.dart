@@ -1,89 +1,95 @@
-// import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:just_form/just_form_builder.dart';
 
-// import 'package:flutter/material.dart';
-// import 'package:just_form/just_form_builder.dart';
+class JustFieldListState {
+  final Map<String, dynamic> value;
+  final void Function() delete;
+  const JustFieldListState({required this.value, required this.delete});
+}
 
-// class JustFieldList extends StatefulWidget {
-//   final String name;
-//   final Widget Function(BuildContext context, Map<String, dynamic> item)
-//   itemBuilder;
-//   const JustFieldList({
-//     super.key,
-//     required this.name,
-//     required this.itemBuilder,
-//   });
+class JustFieldList extends StatefulWidget {
+  final String name;
+  final List<Map<String, dynamic>>? initialValue;
+  final Widget Function(BuildContext context, JustFieldListState state)
+  itemBuilder;
+  final ScrollController? scrollController;
+  const JustFieldList({
+    super.key,
+    required this.name,
+    required this.itemBuilder,
+    this.scrollController,
+    this.initialValue,
+  });
 
-//   @override
-//   State<JustFieldList> createState() => _JustFieldListState();
-// }
+  @override
+  State<JustFieldList> createState() => _JustFieldListState();
+}
 
-// class _JustFieldListState extends State<JustFieldList> {
-//   final List<JustFormController> _listForm = [];
+class _JustFieldListState extends State<JustFieldList> {
+  late final JustFormController _mainFormController;
 
-//   JustFieldController<List<Map<String, dynamic>>>? _fieldController;
+  @override
+  void initState() {
+    super.initState();
+  }
 
-//   @override
-//   void didChangeDependencies() {
-//     super.didChangeDependencies();
-//     _fieldController = context.justForm.field(widget.name);
-//   }
+  @override
+  void didChangeDependencies() {
+    _mainFormController = context.justForm;
+    super.didChangeDependencies();
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return JustField<List<Map<String, dynamic>>>(
-//       name: widget.name,
-//       notifyInternalUpdate: false,
-//       notifyError: false,
-//       validators: [
-//         (value) {
-//           if (_fieldController?.state.mode.contains(
-//                 JustFieldStateMode.validateExternal,
-//               ) ==
-//               true) {
-//             for (var element in _listForm) {
-//               element.validate();
-//             }
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
-//             var errors = _listForm
-//                 .map((e) => e.errors)
-//                 .where((e) => e.isNotEmpty)
-//                 .toList();
-//             if (errors.isNotEmpty) {
-//               return jsonEncode(errors);
-//             }
-//           }
-//           return null;
-//         },
-//       ],
-//       builder: (context, state) {
-//         var values = state.value ?? [];
-//         return ListView.builder(
-//           itemBuilder: (context, index) {
-//             if (_listForm.length > index) {
-//               _listForm[index].close();
-//               _listForm[index] = JustFormController(
-//                 initialValues: values[index],
-//               );
-//             } else {
-//               _listForm.add(JustFormController(initialValues: values[index]));
-//             }
-
-//             return JustFormBuilder(
-//               key: ValueKey("${widget.name}_$index"),
-//               controller: _listForm[index],
-//               onValuesChanged: (value) {
-//                 var newValues = List<Map<String, dynamic>>.from(values)
-//                   ..[index] = value;
-//                 state.setValue(newValues);
-//               },
-//               builder: (context) {
-//                 return widget.itemBuilder(context, values[index]);
-//               },
-//             );
-//           },
-//           itemCount: values.length,
-//         );
-//       },
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return JustField<List<Map<String, dynamic>>>(
+      name: widget.name,
+      initialValue: widget.initialValue,
+      rebuildOnValueChangedInternally: false,
+      rebuildOnErrorChanged: false,
+      rebuildOnAttributeChanged: false,
+      builder: (context, state) {
+        return ListView.builder(
+          controller: widget.scrollController,
+          itemBuilder: (context, index) {
+            return JustFormBuilder(
+              key: ValueKey(state.getValue()![index]),
+              initialValues: state.getValue()![index],
+              onValuesChanged: (value) {
+                final listValue = state.getValue() ?? [];
+                listValue[index] = value;
+                state.setValue(List.from(listValue));
+              },
+              onFieldRegistered: (value) {
+                final listValue = state.getValue() ?? [];
+                listValue[index] = value;
+                state.setValue(List.from(listValue));
+              },
+              builder: (context) {
+                return widget.itemBuilder(
+                  context,
+                  JustFieldListState(
+                    value: state.getValue()![index],
+                    delete: () {
+                      final todoField = _mainFormController
+                          .field<List<Map<String, dynamic>>>(widget.name);
+                      todoField?.setValue(
+                        List.from((todoField.getValue() ?? []))
+                          ..removeAt(index),
+                      );
+                    },
+                  ),
+                );
+              },
+            );
+          },
+          itemCount: state.getValue()?.length ?? 0,
+        );
+      },
+    );
+  }
+}

@@ -6,6 +6,7 @@ abstract class JustFieldState<T> with _$JustFieldState<T> {
   const factory JustFieldState({
     required String name,
     required bool internal,
+    required DateTime updateTime,
     T? value,
     String? error,
     @Default(true) bool active,

@@ -545,6 +545,8 @@ class JustTextField extends StatefulWidget {
   /// configuration, then [materialMisspelledTextStyle] is used by default.
   final SpellCheckConfiguration? spellCheckConfiguration;
 
+  final ValueChanged<String>? onFieldSubmitted;
+
   /// Builds a default context menu for text editing (iOS uses system menu).
   ///
   /// This is a static helper that creates the appropriate context menu based on platform.
@@ -645,6 +647,7 @@ class JustTextField extends StatefulWidget {
     this.spellCheckConfiguration,
     this.magnifierConfiguration,
     this.hintLocales,
+    this.onFieldSubmitted,
   });
 
   /// Creates the state for this widget.
@@ -660,12 +663,6 @@ class JustTextField extends StatefulWidget {
 /// - Synchronization between the controller's value and the form state
 /// - Lifecycle management (initialization and disposal)
 class _JustTextFieldState extends State<JustTextField> {
-  /// The focus node for this text field, either provided or created internally.
-  late final FocusNode _focusNode;
-
-  /// Whether this widget created its own focus node (and thus owns disposal responsibility).
-  late final bool _ownFocusNode;
-
   /// The text editing controller that manages the text input.
   ///
   /// Always created internally by this widget and disposed when the widget is removed.
@@ -678,13 +675,6 @@ class _JustTextFieldState extends State<JustTextField> {
   @override
   void initState() {
     super.initState();
-    if (widget.focusNode == null) {
-      _focusNode = FocusNode();
-      _ownFocusNode = true;
-    } else {
-      _focusNode = widget.focusNode!;
-      _ownFocusNode = false;
-    }
   }
 
   /// Cleans up resources when the widget is removed.
@@ -695,7 +685,6 @@ class _JustTextFieldState extends State<JustTextField> {
   @override
   void dispose() {
     _controller.dispose();
-    if (_ownFocusNode) _focusNode.dispose();
     super.dispose();
   }
 
@@ -728,9 +717,6 @@ class _JustTextFieldState extends State<JustTextField> {
       rebuildOnErrorChanged: true,
       validators: widget.validators,
       keepValueOnDestroy: widget.keepValueOnDestroy,
-      onAttributeChanged: (attributes, isInternal) {
-        _focusNode.unfocus();
-      },
       onChanged: (value, isInternalUpdate) {
         widget.onChanged?.call(value ?? "");
         if (!isInternalUpdate) {
@@ -748,11 +734,12 @@ class _JustTextFieldState extends State<JustTextField> {
           },
           forceErrorText: state.getError(),
           groupId: widget.groupId,
-          focusNode: _focusNode,
+          focusNode: widget.focusNode,
           onTap: widget.onTap,
           onTapAlwaysCalled: widget.onTapAlwaysCalled,
           onTapOutside: widget.onTapOutside,
           onTapUpOutside: widget.onTapUpOutside,
+          onFieldSubmitted: widget.onFieldSubmitted,
           decoration: state.getAttribute('decoration') ?? widget.decoration,
           keyboardType:
               state.getAttribute('keyboardType') ?? widget.keyboardType,

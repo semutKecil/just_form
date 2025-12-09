@@ -55,35 +55,30 @@ class JustField<T> extends StatefulWidget {
 }
 
 class _JustFieldState<T> extends State<JustField<T>> {
-  late final Future<JustFieldController<T>> _fieldController;
+  JustFieldController<T>? _fieldController;
   late final JustFormController _formController;
 
   @override
   void initState() {
     super.initState();
     _formController = context.justForm;
-    Completer<JustFieldController<T>> completer = Completer();
-    _fieldController = completer.future;
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      var ctrl = await _formController._register<T>(
-        widget.name,
-        initialValue: widget.initialValue,
-        validators: widget.validators,
-        keepValueOnDestroy: widget.keepValueOnDestroy,
-        initialAttributes: widget.initialAttributes,
-      );
 
-      widget.onRegistered?.call(ctrl.getState());
+    _fieldController = _formController._register<T>(
+      widget.name,
+      initialValue: widget.initialValue,
+      validators: widget.validators,
+      keepValueOnDestroy: widget.keepValueOnDestroy,
+      initialAttributes: widget.initialAttributes,
+    );
 
-      // widget.onInitialized?.call(ctrl.state);
-
+    if (_fieldController != null) {
+      widget.onRegistered?.call(_fieldController!.getState());
       if (widget.onChanged != null ||
           widget.onAttributeChanged != null ||
           widget.onErrorChanged != null) {
-        ctrl.addListener(_onStateChange);
+        _fieldController!.addListener(_onStateChange);
       }
-      completer.complete(ctrl);
-    });
+    }
   }
 
   void _onStateChange(JustFieldState<T> from, JustFieldState<T> to) {
@@ -106,7 +101,7 @@ class _JustFieldState<T> extends State<JustField<T>> {
     if (widget.onChanged != null ||
         widget.onAttributeChanged != null ||
         widget.onErrorChanged != null) {
-      _fieldController.then((value) => value.removeListener(_onStateChange));
+      _fieldController?.removeListener(_onStateChange);
     }
 
     _formController._unRegister(widget.name, hard: !widget.keepValueOnDestroy);
@@ -116,73 +111,59 @@ class _JustFieldState<T> extends State<JustField<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JustFormController, Map<String, JustFieldData>>(
-      buildWhen: (previous, current) =>
-          current.containsKey(widget.name) != previous.containsKey(widget.name),
-      builder: (context, state) {
-        if (state.containsKey(widget.name) == false) {
-          return SizedBox.shrink();
-        }
+    return _fieldController == null
+        ? const SizedBox.shrink()
+        : BlocBuilder<JustFieldData<T>, JustFieldState<T>>(
+            bloc:
+                context.read<JustFormController>().state[widget.name]
+                    as JustFieldData<T>,
+            buildWhen: (previous, current) {
+              if (widget.rebuildOnAttributeChanged) {
+                if (!mapEquals(
+                  (Map.from(previous.attributes)..removeWhere((key, value) {
+                    return widget.dontRebuildOnAttributes.contains(key);
+                  })),
+                  (Map.from(current.attributes)..removeWhere((key, value) {
+                    return widget.dontRebuildOnAttributes.contains(key);
+                  })),
+                )) {
+                  return true;
+                }
+              }
 
-        return FutureBuilder(
-          future: _fieldController,
-          builder: (context, snapshot) {
-            return (snapshot.connectionState == ConnectionState.done &&
-                    snapshot.data != null)
-                ? BlocBuilder<JustFieldData<T>, JustFieldState<T>>(
-                    bloc:
-                        context.read<JustFormController>().state[widget.name]
-                            as JustFieldData<T>,
-                    buildWhen: (previous, current) {
-                      if (widget.rebuildOnAttributeChanged) {
-                        if (!mapEquals(
-                          (Map.from(previous.attributes)..removeWhere((
-                            key,
-                            value,
-                          ) {
-                            return widget.dontRebuildOnAttributes.contains(key);
-                          })),
-                          (Map.from(current.attributes)..removeWhere((
-                            key,
-                            value,
-                          ) {
-                            return widget.dontRebuildOnAttributes.contains(key);
-                          })),
-                        )) {
-                          return true;
-                        }
-                      }
+              if (widget.rebuildOnValueChanged &&
+                  (previous.value != current.value ||
+                      current.value is List ||
+                      current.value is Iterable ||
+                      current.value is Map ||
+                      current.value is Set) &&
+                  !current.internal) {
+                return true;
+              }
 
-                      if (widget.rebuildOnValueChanged &&
-                          previous.value != current.value &&
-                          !current.internal) {
-                        return true;
-                      }
+              if (widget.rebuildOnValueChangedInternally &&
+                  (previous.value != current.value ||
+                      current.value is List ||
+                      current.value is Iterable ||
+                      current.value is Map ||
+                      current.value is Set) &&
+                  current.internal) {
+                return true;
+              }
 
-                      if (widget.rebuildOnValueChangedInternally &&
-                          previous.value != current.value &&
-                          current.internal) {
-                        return true;
-                      }
-
-                      if (widget.rebuildOnErrorChanged &&
-                          previous.error != current.error) {
-                        return true;
-                      }
-                      return false;
-                    },
-                    builder: (context, state) {
-                      try {
-                        return widget.builder(context, snapshot.data!);
-                      } catch (e) {
-                        throw ("${widget.name} : Field builder error", e);
-                      }
-                    },
-                  )
-                : SizedBox.shrink();
-          },
-        );
-      },
-    );
+              if (widget.rebuildOnErrorChanged &&
+                  previous.error != current.error) {
+                return true;
+              }
+              return false;
+            },
+            builder: (context, state) {
+              try {
+                return widget.builder(context, _fieldController!);
+              } catch (e) {
+                throw ("${widget.name} : Field builder error", e);
+              }
+            },
+          );
   }
 }

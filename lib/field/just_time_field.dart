@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:just_form/debouncer.dart';
 import 'package:just_form/field/just_picker_field.dart';
 import 'package:just_form/just_form_builder.dart';
 
@@ -54,6 +53,9 @@ class JustTimeField extends StatefulWidget {
   final bool freeText;
   final String invalidTimeErrorText;
   final Widget clockIcon;
+  final Widget? clearIcon;
+  final bool? withClearButton;
+  final bool enabled;
 
   const JustTimeField({
     super.key,
@@ -64,10 +66,13 @@ class JustTimeField extends StatefulWidget {
     this.validators = const [],
     this.onChanged,
     this.timeFormat,
+    this.enabled = true,
     this.timeFormatText,
     this.decoration = const InputDecoration(),
     this.pickerBuilder,
     this.freeText = true,
+    this.clearIcon,
+    this.withClearButton,
     this.invalidTimeErrorText = "Invalid time",
     this.clockIcon = const Icon(Icons.access_time),
   });
@@ -112,6 +117,9 @@ class _JustTimeFieldState extends State<JustTimeField> {
       pickerIcon: widget.clockIcon,
       decoration: widget.decoration,
       freeText: widget.freeText,
+      enabled: widget.enabled,
+      withClearButton: widget.withClearButton,
+      clearIcon: widget.clearIcon,
       initialAttributes: widget.initialAttributes,
       initialValue: widget.initialValue,
       keepValueOnDestroy: widget.keepValueOnDestroy,

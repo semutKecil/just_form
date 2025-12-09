@@ -18,6 +18,7 @@ class JustFormBuilder extends StatefulWidget {
   final JustFormController? controller;
   final Map<String, dynamic>? initialValues;
   final List<JustValidator> validators;
+  final ValueChanged<Map<String, dynamic>>? onFieldRegistered;
   final ValueChanged<Map<String, dynamic>>? onValuesChanged;
   final ValueChanged<Map<String, String?>>? onErrorsChanged;
 
@@ -28,6 +29,7 @@ class JustFormBuilder extends StatefulWidget {
     this.initialValues,
     this.onValuesChanged,
     this.onErrorsChanged,
+    this.onFieldRegistered,
     this.validators = const [],
   });
 
@@ -47,6 +49,7 @@ class _JustFormBuilderState extends State<JustFormBuilder> {
       _controller = JustFormController(
         initialValues: widget.initialValues ?? {},
         validators: widget.validators,
+        onFieldRegistered: widget.onFieldRegistered,
       );
     } else {
       _controller = widget.controller!;
@@ -59,10 +62,6 @@ class _JustFormBuilderState extends State<JustFormBuilder> {
     if (widget.onErrorsChanged != null) {
       _controller.addErrorsChangedListener(widget.onErrorsChanged!);
     }
-
-    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-    //   _controller._formRenrederedComplete();
-    // });
   }
 
   @override
@@ -80,6 +79,11 @@ class _JustFormBuilderState extends State<JustFormBuilder> {
     }
 
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   @override

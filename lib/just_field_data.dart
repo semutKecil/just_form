@@ -26,12 +26,20 @@ class JustFieldData<T> extends Cubit<JustFieldState<T>> {
   void _setSubFormController(JustFormController? controller) =>
       _subFormController = controller;
 
-  void _update(JustFieldState<T> newState) => emit(newState);
+  void _update(JustFieldState<T> newState) {
+    if (!isClosed) {
+      emit(newState.copyWith(updateTime: DateTime.now()));
+    }
+  }
 
   T? _getValue() => state.value;
 
   void _setValue(T? value, {bool dontTouch = false, bool internal = false}) {
-    if (state.value == value) return;
+    if (state.value == value &&
+        !(value is List || value is Map || value is Iterable || value is Set)) {
+      return;
+    }
+
     if (!dontTouch && !_touched) {
       _touch();
     }

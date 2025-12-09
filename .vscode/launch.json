@@ -48,6 +48,18 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
+        },
+
+        {
+            "name": "example Flutter Web (Wasm)",
+            "cwd": "example",
+            "type": "dart",
+            "request": "launch",
+            "args": [
+                "-d",
+                "chrome", // or "web-server" if you prefer to use the built-in web server
+                "--wasm"
+            ]
         }
     ]
 }

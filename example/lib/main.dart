@@ -1,4 +1,5 @@
 import 'package:example/basic_example.dart';
+import 'package:example/todo.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -33,8 +34,8 @@ class ExamplePage extends StatelessWidget {
             preferredSize: Size.fromHeight(32),
             child: TabBar(
               tabs: [
-                Tab(text: "Basic", height: 32),
                 Tab(text: "Todo", height: 32),
+                Tab(text: "Basic", height: 32),
                 Tab(text: "Variation", height: 32),
               ],
             ),
@@ -43,8 +44,8 @@ class ExamplePage extends StatelessWidget {
         body: SafeArea(
           child: TabBarView(
             children: [
+              Todo(),
               BasicExample(),
-              Center(child: Text("Favorites Page")),
               Center(child: Text("Settings Page")),
             ],
           ),
