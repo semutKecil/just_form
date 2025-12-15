@@ -1,3 +1,6 @@
+## 0.0.3 - Update ReadME
+- Add more documentation in readMe
+
 ## 0.0.2 - Documentation & minor fixes
 
 ### Fix 

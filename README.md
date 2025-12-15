@@ -10,31 +10,18 @@ A powerful and flexible Flutter form management package that provides automatic 
 - [Just Form](#just-form)
 - [This README are UNDER CONSTRUCTION](#this-readme-are-under-construction)
   - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
+  - [ScreenShots](#screenshots)
   - [Features](#features)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Basic Usage](#basic-usage)
   - [Validation](#validation)
     - [Built-in Validators](#built-in-validators)
-    - [Custom Validators](#custom-validators)
     - [Cross-Field Validation](#cross-field-validation)
+    - [Custom Validation in `JustFormBuilder`](#custom-validation-in-justformbuilder)
+      - [When to Use](#when-to-use)
+    - [Key Difference](#key-difference)
   - [Form Fields](#form-fields)
-    - [Available Fields](#available-fields)
-      - [1. **JustTextField**](#1-justtextfield)
-      - [2. **JustDateField**](#2-justdatefield)
-      - [3. **JustTimeField**](#3-justtimefield)
-      - [4. **JustDropDownButton**](#4-justdropdownbutton)
-      - [5. **JustCheckbox**](#5-justcheckbox)
-      - [6. **JustSwitch**](#6-justswitch)
-      - [7. **JustSlider**](#7-justslider)
-      - [8. **JustRangeSlider**](#8-justrangeslider)
-      - [9. **JustRadioGroup**](#9-justradiogroup)
-      - [10. **JustCheckboxListTile**](#10-justcheckboxlisttile)
-      - [11. **JustSwitchListTile**](#11-justswitchlisttile)
-      - [12. **JustFieldList**](#12-justfieldlist)
-      - [13. **JustPickerField**](#13-justpickerfield)
-      - [14. **JustNestedBuilder**](#14-justnestedbuilder)
     - [Creating Custom Fields](#creating-custom-fields)
   - [Advanced Features](#advanced-features)
     - [Manipulating Attributes](#manipulating-attributes)
@@ -45,26 +32,21 @@ A powerful and flexible Flutter form management package that provides automatic 
     - [JustFormBuilder](#justformbuilder)
     - [JustField](#justfield)
     - [JustBuilder](#justbuilder)
+    - [JustFormController - Quick Reference](#justformcontroller---quick-reference)
+    - [Quick Access](#quick-access)
+    - [Common Tasks](#common-tasks)
     - [JustFieldController](#justfieldcontroller)
   - [License](#license)
   - [Contributing](#contributing)
   - [Support](#support)
 
----
-
-## Overview
-
-**Just Form** simplifies form building in Flutter by:
-
-- **Automatic Field Management** - Fields register themselves with the form controller
-- **Type-Safe** - Full generic type support for any value type
-- **Performance Optimized** - Selective rebuild control and fine-grained state tracking
-- **Validation Ready** - Built-in validators and cross-field validation support
-- **BLoC Powered** - Uses Flutter BLoC for predictable state management
-- **Extensible** - Easily create custom field widgets
-- **Attribute Tracking** - Store and track custom metadata alongside field values
 
 ---
+
+## ScreenShots
+| Basic Usage | Todo |
+|----------|-----|
+| ![Fix Height](screenshots/basic-example.gif) | ![Fix Height](screenshots/todo-example.gif) |
 
 ## Features
 
@@ -73,11 +55,9 @@ A powerful and flexible Flutter form management package that provides automatic 
 ✅ Cross-field validation support  
 ✅ Custom field widget creation  
 ✅ Flexible rebuild triggers (value, error, attributes)  
-✅ Field attribute manipulation  
-✅ External and internal controller management  
+✅ Field attribute manipulation   
 ✅ Built-in field widgets (TextField, DateField, DropdownField, etc.)  
 ✅ Selective field rebuilding with `JustBuilder`  
-✅ Debouncing and validation optimization  
 
 ---
 
@@ -90,7 +70,6 @@ Add `just_form` to your `pubspec.yaml`:
 ```yaml
 dependencies:
   just_form: ^0.0.1
-  flutter_bloc: ^9.1.1
 ```
 
 ### Basic Usage
@@ -112,35 +91,26 @@ class MyForm extends StatelessWidget {
             // Email field
             JustTextField(
               name: 'email',
-              builder: (context, controller) {
-                return TextField(
-                  onChanged: (value) => controller.value = value,
-                  decoration: InputDecoration(
-                    hintText: 'Enter email',
-                    errorText: controller.error,
-                  ),
-                );
-              },
+              decoration: InputDecoration(
+                hintText: 'Enter email',
+                labelText: "Email"
+              ),
             ),
             
             // Password field
             JustTextField(
               name: 'password',
-              builder: (context, controller) {
-                return TextField(
-                  onChanged: (value) => controller.value = value,
-                  decoration: InputDecoration(
-                    hintText: 'Enter password',
-                    errorText: controller.error,
-                  ),
-                );
-              },
+              decoration: InputDecoration(
+                hintText: 'Enter password',
+                labelText: "Password"
+              ),
             ),
             
             // Submit button
             ElevatedButton(
               onPressed: () {
-                final formController = context.read<JustFormController>();
+                final formController = context.justForm;
+                formController.validate();
                 print('Form values: ${formController.getValues()}');
                 print('Form errors: ${formController.getErrors()}');
               },
@@ -185,32 +155,6 @@ JustTextField(
 )
 ```
 
-### Custom Validators
-
-Create reusable custom validators:
-
-```dart
-class EmailValidator {
-  static String? validate(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email is required';
-    }
-    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!regex.hasMatch(value)) {
-      return 'Invalid email format';
-    }
-    return null;
-  }
-}
-
-// Usage
-JustTextField(
-  name: 'email',
-  validators: [EmailValidator.validate],
-  builder: (context, controller) => TextField(...),
-)
-```
-
 ### Cross-Field Validation
 
 Validate multiple fields together using `JustValidator`:
@@ -221,13 +165,10 @@ JustFormBuilder(
     JustValidator(
       triggers: ['password', 're-password'],
       validator: (formValues) {
-        final password = formValues?['password'];
-        final confirmPassword = formValues?['re-password'];
-        
-        if (password != confirmPassword) {
-          return 'Passwords do not match';
+        if (formValues?["password"] != formValues?["re-password"]) {
+            return "not_match";
         }
-        return null;
+        return null;        
       },
       targets: [
         JustTargetError(
@@ -242,316 +183,53 @@ JustFormBuilder(
       children: [
         JustTextField(
           name: 'password',
-          builder: (context, controller) => TextField(...),
+          decoration: InputDecoration(
+            hintText: 'Enter password',
+            labelText: "Password"
+          ),
         ),
         JustTextField(
           name: 're-password',
-          builder: (context, controller) => TextField(...),
+          decoration: InputDecoration(
+            hintText: 'Retype Enter password',
+            labelText: "Retype Password"
+          ),
         ),
       ],
     );
   },
 )
 ```
+
+### Custom Validation in `JustFormBuilder`
+
+Unlike **field-level** or **form-level** validators, the package doesn’t ship with built‑in support for custom/async validation. But you can still hook into the **form API** directly to set errors programmatically.
+
+You can access the form context and manually set an error on any field:
+
+```dart
+context.justForm.field("username")?.setError("Username already taken");
+```
+
+- **`context.justForm`** → gives you access to the form instance.  
+- **`.field("fieldName")`** → retrieves the field controller by name.  
+- **`.setError("message")`** → attaches a custom error message to that field.
+
+#### When to Use
+This pattern is useful for validations that:
+- Require **async checks** (e.g., API calls to check if a username/email is already registered).
+- Depend on **external state** (e.g., server-side rules, business logic).
+- Take longer than synchronous validation (e.g., debounce + network request).
+
+
+### Key Difference
+- **Default validation** → tied to the field (`validator:` inside `JustTextField`).  
+- **Cross validation** → tied to the form (`JustValidator` inside `JustFormBuilder`).  
+- **Custom validation** → not provided by the package, but you can **manually set errors** via `context.justForm.field(...).setError(...)`.
 
 ---
 
 ## Form Fields
-
-### Available Fields
-
-Just Form provides pre-built field widgets for common use cases:
-
-#### 1. **JustTextField**
-Text input field with optional validation display.
-
-```dart
-JustTextField(
-  name: 'username',
-  initialValue: 'John',
-  validators: [/* validators */],
-  builder: (context, controller) {
-    return TextField(
-      controller: TextEditingController(text: controller.value),
-      onChanged: (value) => controller.value = value,
-      decoration: InputDecoration(errorText: controller.error),
-    );
-  },
-)
-```
-
-#### 2. **JustDateField**
-Date picker field.
-
-```dart
-JustDateField(
-  name: 'birth-date',
-  initialValue: DateTime(2000, 1, 1),
-  builder: (context, controller) {
-    return TextField(
-      readOnly: true,
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          initialDate: controller.value ?? DateTime.now(),
-          firstDate: DateTime(1900),
-          lastDate: DateTime.now(),
-        );
-        if (date != null) controller.value = date;
-      },
-      decoration: InputDecoration(
-        hintText: 'Select date',
-        suffixIcon: Icon(Icons.calendar_today),
-      ),
-    );
-  },
-)
-```
-
-#### 3. **JustTimeField**
-Time picker field.
-
-```dart
-JustTimeField(
-  name: 'appointment-time',
-  builder: (context, controller) {
-    return TextField(
-      readOnly: true,
-      onTap: () async {
-        final time = await showTimePicker(
-          context: context,
-          initialTime: controller.value ?? TimeOfDay.now(),
-        );
-        if (time != null) controller.value = time;
-      },
-      decoration: InputDecoration(
-        hintText: 'Select time',
-        suffixIcon: Icon(Icons.access_time),
-      ),
-    );
-  },
-)
-```
-
-#### 4. **JustDropDownButton**
-Dropdown selection field.
-
-```dart
-JustDropDownButton<String>(
-  name: 'country',
-  initialValue: 'US',
-  builder: (context, controller) {
-    return DropdownButton<String>(
-      value: controller.value,
-      onChanged: (value) => controller.value = value,
-      items: ['US', 'UK', 'CA', 'AU']
-          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-          .toList(),
-    );
-  },
-)
-```
-
-#### 5. **JustCheckbox**
-Boolean checkbox field.
-
-```dart
-JustCheckbox(
-  name: 'agree-terms',
-  initialValue: false,
-  builder: (context, controller) {
-    return Checkbox(
-      value: controller.value ?? false,
-      onChanged: (value) => controller.value = value,
-    );
-  },
-)
-```
-
-#### 6. **JustSwitch**
-Toggle switch field.
-
-```dart
-JustSwitch(
-  name: 'notifications-enabled',
-  initialValue: true,
-  builder: (context, controller) {
-    return Switch(
-      value: controller.value ?? false,
-      onChanged: (value) => controller.value = value,
-    );
-  },
-)
-```
-
-#### 7. **JustSlider**
-Slider field for numeric values.
-
-```dart
-JustSlider(
-  name: 'brightness',
-  initialValue: 0.5,
-  builder: (context, controller) {
-    return Slider(
-      value: controller.value ?? 0.5,
-      onChanged: (value) => controller.value = value,
-      min: 0,
-      max: 1,
-    );
-  },
-)
-```
-
-#### 8. **JustRangeSlider**
-Range slider for selecting min/max values.
-
-```dart
-JustRangeSlider(
-  name: 'price-range',
-  initialValue: RangeValues(10, 100),
-  builder: (context, controller) {
-    final range = controller.value ?? RangeValues(10, 100);
-    return RangeSlider(
-      values: range,
-      onChanged: (value) => controller.value = value,
-      min: 0,
-      max: 500,
-    );
-  },
-)
-```
-
-#### 9. **JustRadioGroup**
-Radio button group field.
-
-```dart
-JustRadioGroup<String>(
-  name: 'plan',
-  initialValue: 'basic',
-  builder: (context, controller) {
-    return Column(
-      children: ['basic', 'pro', 'enterprise'].map((plan) {
-        return RadioListTile<String>(
-          value: plan,
-          groupValue: controller.value,
-          onChanged: (value) => controller.value = value,
-          title: Text(plan),
-        );
-      }).toList(),
-    );
-  },
-)
-```
-
-#### 10. **JustCheckboxListTile**
-Checkbox list tile field.
-
-```dart
-JustCheckboxListTile(
-  name: 'marketing-emails',
-  initialValue: true,
-  builder: (context, controller) {
-    return CheckboxListTile(
-      value: controller.value ?? false,
-      onChanged: (value) => controller.value = value,
-      title: Text('Receive marketing emails'),
-    );
-  },
-)
-```
-
-#### 11. **JustSwitchListTile**
-Switch list tile field.
-
-```dart
-JustSwitchListTile(
-  name: 'dark-mode',
-  initialValue: false,
-  builder: (context, controller) {
-    return SwitchListTile(
-      value: controller.value ?? false,
-      onChanged: (value) => controller.value = value,
-      title: Text('Dark Mode'),
-    );
-  },
-)
-```
-
-#### 12. **JustFieldList**
-Dynamic list of fields.
-
-```dart
-JustFieldList(
-  name: 'phone-numbers',
-  initialValue: [],
-  builder: (context, controller) {
-    return Column(
-      children: [
-        ...List.generate(
-          controller.value?.length ?? 0,
-          (index) => JustTextField(
-            name: 'phone-numbers.$index',
-            builder: (context, fieldController) => TextField(),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final numbers = controller.value ?? [];
-            controller.value = [...numbers, ''];
-          },
-          child: Text('Add Phone'),
-        ),
-      ],
-    );
-  },
-)
-```
-
-#### 13. **JustPickerField**
-Generic picker field for custom selection.
-
-```dart
-JustPickerField<Color>(
-  name: 'favorite-color',
-  initialValue: Colors.blue,
-  builder: (context, controller) {
-    return ListTile(
-      title: Text('Favorite Color'),
-      trailing: Container(
-        width: 50,
-        color: controller.value ?? Colors.blue,
-      ),
-      onTap: () async {
-        // Show color picker
-      },
-    );
-  },
-)
-```
-
-#### 14. **JustNestedBuilder**
-Nested form fields.
-
-```dart
-JustNestedBuilder(
-  name: 'address',
-  initialValue: {},
-  builder: (context, controller) {
-    return Column(
-      children: [
-        JustTextField(
-          name: 'address.street',
-          builder: (context, fieldController) => TextField(),
-        ),
-        JustTextField(
-          name: 'address.city',
-          builder: (context, fieldController) => TextField(),
-        ),
-      ],
-    );
-  },
-)
-```
 
 ### Creating Custom Fields
 
@@ -789,6 +467,43 @@ Selective field listener and rebuilder.
 - `rebuildOnValueChanged` - Rebuild on value changes
 - `rebuildOnErrorChanged` - Rebuild on error changes
 - `rebuildOnAttributeChanged` - Rebuild on attribute changes
+
+### JustFormController - Quick Reference
+
+| Method/Property | Purpose | Returns | Example |
+|---|---|---|---|
+| `getValues()` | Get all form field values | `Map<String, dynamic>` | `context.justForm.getValues()['email']` |
+| `getErrors()` | Get all validation errors (only non-null) | `Map<String, String?>` | `context.justForm.getErrors()['email']` |
+| `isValid()` | Check if form has no errors | `bool` | `if (context.justForm.isValid()) { ... }` |
+| `validate()` | Trigger validation on all fields | `void` | `context.justForm.validate()` |
+| `patchValues(values)` | Update multiple field values at once | `void` | `context.justForm.patchValues({'email': 'new@email.com'})` |
+| `field<T>(name)` | Get a specific field controller | `JustFieldController<T>?` | `context.justForm.field('email')?.value = 'x@y.com'` |
+| `fields()` | Get all field controllers as a map | `Map<String, JustFieldController>` | `context.justForm.fields()['email']?.value` |
+| `addValuesChangedListener(fn)` | Listen to value changes | `void` | `context.justForm.addValuesChangedListener((values) { ... })` |
+| `addErrorsChangedListener(fn)` | Listen to error changes | `void` | `context.justForm.addErrorsChangedListener((errors) { ... })` |
+| `dispose()` | Clean up resources | `void` | `context.justForm.dispose()` |
+<!-- | `reset()` | Reset form to initial state | `void` | `context.justForm.reset()` | -->
+
+### Quick Access
+
+| Way to Access Controller | Code |
+|---|---|
+| Inside widget | `final controller = context.justForm;` |
+| With read | `final controller = context.read<JustFormController>();` |
+| With watch (rebuilds) | `final controller = context.watch<JustFormController>();` |
+
+### Common Tasks
+
+| Task | Code |
+|---|---|
+| Get form data to submit | `final data = controller.getValues();` |
+| Check if valid before submit | `if (controller.isValid()) { submitForm(); }` |
+| Show all errors | `controller.validate();` |
+| Update a field | `controller.field('email')?.value = 'new@email.com';` |
+| Set field error manually | `controller.field('email')?.setError('Custom error');` |
+| Get specific field value | `final email = controller.field('email')?.value;` |
+| Listen to changes | `controller.addValuesChangedListener((values) { print(values); });` |
+<!-- | Clear form | `controller.reset();` | -->
 
 ### JustFieldController<T>
 

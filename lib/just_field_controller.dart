@@ -22,6 +22,11 @@ class JustFieldController<T> {
     _cubit._setError(error, internal: internal, forced: true);
   }
 
+  set value(T? value) => setValue(value);
+  T? get value => getValue();
+  String? get error => getError();
+  set error(String? error) => setError(error);
+
   void _setErrorInternal(String? error, {int errorId = -1}) {
     _cubit._setError(error, internal: true, forced: false, errorId: errorId);
   }

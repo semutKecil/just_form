@@ -20,7 +20,7 @@ class BasicExample extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: JustFormBuilder(
         initialValues: {
-          "username": "John_Doexxx",
+          "username": "John_Doe",
           "birth-date": DateTime.now(),
           "sub-form": {
             "hidden-text": "some random 2",
