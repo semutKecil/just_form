@@ -9,10 +9,10 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
   final ValueChanged<Map<String, dynamic>>? onFieldRegistered;
 
   final Debouncer<void> valuesChangedDebouncer = Debouncer(
-    delay: Duration(milliseconds: 10),
+    delay: Duration(milliseconds: 100),
   );
   final Debouncer<void> errorsChangedDebouncer = Debouncer(
-    delay: Duration(milliseconds: 10),
+    delay: Duration(milliseconds: 100),
   );
 
   JustFormController({
@@ -64,14 +64,14 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
 
       Future(() {
         cubit.addListener((from, to) {
-          if (from.value != to.value) {
+          if (from.value != to.value && _valuesChangedListeners.isNotEmpty) {
             valuesChangedDebouncer.run(() {
               for (var listener in _valuesChangedListeners) {
                 listener(getValues());
               }
             });
           }
-          if (from.error != to.error) {
+          if (from.error != to.error && _errorsChangedListeners.isNotEmpty) {
             errorsChangedDebouncer.run(() {
               for (var listener in _errorsChangedListeners) {
                 listener(_getFieldErrors());
