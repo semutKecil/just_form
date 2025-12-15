@@ -1,7 +1,7 @@
 name: just_form
 description: "A Flutter package for building forms and validation."
 version: 0.0.1
-homepage:
+homepage: https://github.com/semutKecil/just_form
 
 environment:
   sdk: ^3.9.2
