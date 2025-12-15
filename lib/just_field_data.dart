@@ -95,8 +95,11 @@ class JustFieldData<T> extends Cubit<JustFieldState<T>> {
 
   dynamic _getAttribute(String key) => state.attributes[key];
 
-  Future<String?> _validateWithDebounce() =>
-      validationDebouncer.run(() => _validate());
+  Future<String?> _validateWithDebounce() async {
+    return validators.isEmpty
+        ? null
+        : validationDebouncer.run(() => _validate());
+  }
 
   String? _validate({bool forced = false}) {
     if (forced) {
