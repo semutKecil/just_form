@@ -1,3 +1,12 @@
+## 0.0.2 - Documentation & minor fixes
+
+### Fix 
+- Fix bug on form listener debouncer.
+- Fix bug on internal validation
+- Add warning on readme
+
+---
+
 ## 0.0.1 - Initial Release
 
 ### Features
