@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:just_form/field/just_picker_field.dart';
-import 'package:just_form/just_form_builder.dart';
+import 'package:just_form/src/ui/field/just_picker_field.dart';
+import 'package:just_form/src/ui/just_form_builder.dart';
 
 class JustTimeField extends StatefulWidget {
   /// The name of the field. This is used to identify the field in the

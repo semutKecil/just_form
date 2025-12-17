@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/just_form_builder.dart';
+import 'package:just_form/src/ui/just_form_builder.dart';
 
 /// The `JustCheckbox` class is a Flutter widget that represents a checkbox field in a form. It extends the `StatelessWidget` class. Here's a summary of what each field and method does:
 ///

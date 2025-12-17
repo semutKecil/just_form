@@ -1,4 +1,4 @@
-part of 'just_form_builder.dart';
+part of 'ui/just_form_builder.dart';
 
 typedef JustFieldListener<T> =
     void Function(JustFieldState<T> from, JustFieldState<T> to);

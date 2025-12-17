@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/just_form_builder.dart';
+import 'package:just_form/src/ui/just_form_builder.dart';
 
 /// This class `JustRadioGroup<T>` is a Flutter widget that represents a radio button group in a form. It extends `StatelessWidget` and is used to create a form field with a group of radio buttons. Here's what each method does:
 ///

@@ -1,12 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/field/just_checkbox.dart';
-import 'package:just_form/field/just_checkbox_list_tile.dart';
-import 'package:just_form/field/just_drop_down_button.dart';
-import 'package:just_form/field/just_radio_group.dart';
-import 'package:just_form/field/just_slider.dart';
-import 'package:just_form/field/just_text_field.dart';
-import 'package:just_form/just_builder.dart';
-import 'package:just_form/just_form_builder.dart';
+import 'package:just_form/just_form.dart';
 import 'package:validatorless/validatorless.dart';
 
 class BasicExampleNestedForm extends StatelessWidget {

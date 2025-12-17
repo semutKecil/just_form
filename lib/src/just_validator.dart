@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:just_form/just_target_error.dart';
+import 'package:just_form/src/just_target_error.dart';
 
 class JustValidator {
   final List<String> triggers;

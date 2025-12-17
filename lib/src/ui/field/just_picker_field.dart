@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/debouncer.dart';
-import 'package:just_form/just_form_builder.dart';
+import 'package:just_form/src/debouncer.dart';
+import 'package:just_form/src/ui/just_form_builder.dart';
 
 class JustPickerField<T> extends StatefulWidget
     implements JustFieldValidatorAbstract<T> {

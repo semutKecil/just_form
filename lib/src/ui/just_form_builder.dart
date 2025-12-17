@@ -4,14 +4,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:just_form/debouncer.dart';
-import 'package:just_form/just_field_state.dart';
-import 'package:just_form/just_validator.dart';
-part 'just_form_controller.dart';
-part 'just_field.dart';
-part 'just_field_controller.dart';
+import 'package:just_form/src/debouncer.dart';
+import 'package:just_form/src/just_field_state.dart';
+import 'package:just_form/src/just_validator.dart';
+part '../just_form_controller.dart';
+part '../just_field.dart';
+part '../just_field_controller.dart';
 part 'field/just_nested_builder.dart';
-part 'just_field_data.dart';
+part '../just_field_data.dart';
 
 /// A stateful widget that provides form building capabilities with automatic field management and validation.
 ///

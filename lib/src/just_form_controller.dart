@@ -1,4 +1,4 @@
-part of 'just_form_builder.dart';
+part of 'ui/just_form_builder.dart';
 
 class JustFormController extends Cubit<Map<String, JustFieldData>> {
   final Map<String, dynamic>? initialValues;
@@ -301,5 +301,4 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
 
 extension JustFOrmContextExtension on BuildContext {
   JustFormController get justForm => read<JustFormController>();
-  JustFormController justForm2() => read<JustFormController>();
 }

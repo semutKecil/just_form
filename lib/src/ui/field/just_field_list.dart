@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:just_form/just_form_builder.dart';
+import 'package:just_form/src/ui/just_form_builder.dart';
 
 class JustFieldListState {
   final Map<String, dynamic> value;

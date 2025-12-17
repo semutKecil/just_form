@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:just_form/just_form_builder.dart';
-import 'package:just_form/just_validator.dart';
+import 'package:just_form/src/ui/just_form_builder.dart';
+import 'package:just_form/src/just_validator.dart';
 
 /// A text input field widget integrated with the just_form system.
 ///

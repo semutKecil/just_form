@@ -1,4 +1,4 @@
-part of 'just_form_builder.dart';
+part of 'ui/just_form_builder.dart';
 
 /// Abstract base class defining the contract for field validators.
 ///
