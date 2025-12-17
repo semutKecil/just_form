@@ -152,7 +152,7 @@ class BasicExampleNestedForm extends StatelessWidget {
                                 title: Text("Checkbox"),
                               ),
                               JustBuilder(
-                                fields: ["checkbox"],
+                                fields: ["checkbox", "slider"],
                                 rebuildOnValueChanged: true,
                                 builder: (context, state) {
                                   if (state["checkbox"]?.getValue() == true) {

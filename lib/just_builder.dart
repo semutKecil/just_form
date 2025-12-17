@@ -4,65 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_form/just_field_state.dart';
 import 'package:just_form/just_form_builder.dart';
 
-/// A configuration class for specifying which form fields to monitor in a [JustBuilder].
-///
-/// Provides factory constructors for common patterns:
-/// - Monitor all fields in the form
-/// - Monitor multiple specific fields
-/// - Monitor a single field
-///
-/// This class is used as a parameter to control selective field rebuilding,
-/// allowing widgets to update only when relevant fields change.
-///
-/// ## Usage
-///
-/// ```dart
-/// // Monitor all fields
-/// JustBuilderFields.all()
-///
-/// // Monitor specific fields
-/// JustBuilderFields.multiple(['email', 'password'])
-/// JustBuilderFields.one('email')
-/// ```
-class JustBuilderFields {
-  /// Whether to monitor all fields in the form.
-  final bool all;
-
-  /// The specific field names to monitor.
-  ///
-  /// Empty if [all] is true.
-  final List<String> fields;
-
-  /// Internal constructor for [JustBuilderFields].
-  ///
-  /// Use factory constructors instead: [all], [multiple], [one].
-  JustBuilderFields._({this.all = false, this.fields = const []});
-
-  /// Creates a configuration to monitor all form fields.
-  ///
-  /// The builder will rebuild whenever any field in the form changes
-  /// (respecting the rebuild flags set on [JustBuilder]).
-  factory JustBuilderFields.all() => JustBuilderFields._(all: true);
-
-  /// Creates a configuration to monitor multiple specific fields.
-  ///
-  /// The builder will rebuild only when the specified fields change.
-  ///
-  /// Parameters:
-  /// - [fields] - List of field names to monitor
-  factory JustBuilderFields.multiple(List<String> fields) =>
-      JustBuilderFields._(fields: fields);
-
-  /// Creates a configuration to monitor a single field.
-  ///
-  /// The builder will rebuild only when the specified field changes.
-  ///
-  /// Parameters:
-  /// - [field] - The field name to monitor
-  factory JustBuilderFields.one(String field) =>
-      JustBuilderFields._(fields: [field]);
-}
-
 /// A stateless widget that selectively rebuilds based on changes to specific form fields.
 ///
 /// [JustBuilder] listens to changes in the form and rebuilds only when:
@@ -114,7 +55,7 @@ class JustBuilderFields {
 ///   },
 /// )
 /// ```
-class JustBuilder extends StatelessWidget {
+class JustBuilder extends StatefulWidget {
   /// List of specific field names to monitor.
   ///
   /// The builder will rebuild only when these fields change.
@@ -213,29 +154,39 @@ class JustBuilder extends StatelessWidget {
     required this.builder,
   });
 
-  /// Determines if a field state change should trigger a rebuild.
-  ///
-  /// Evaluates the rebuild conditions by checking:
-  /// - [rebuildOnValueChanged] - whether value changed
-  /// - [rebuildOnErrorChanged] - whether error changed
-  /// - [rebuildOnAttributeChanged] - whether attributes changed
-  ///
-  /// Returns true if any configured condition is met, false otherwise.
-  ///
-  /// Used internally by [BlocBuilder] to optimize rebuilds and prevent
-  /// unnecessary widget reconstructions.
-  ///
-  /// Parameters:
-  /// - `previous` - The previous field state
-  /// - `current` - The current field state
-  ///
-  /// Returns:
-  /// - true if the field changed in a way that should trigger a rebuild
-  /// - false if the change should be ignored
+  @override
+  State<JustBuilder> createState() => _JustBuilderState();
+}
+
+class _JustBuilderState extends State<JustBuilder> {
+  late final AnyCubit<Map<String, JustFieldController<dynamic>>> fieldChange;
+
+  @override
+  void initState() {
+    super.initState();
+    fieldChange = AnyCubit<Map<String, JustFieldController<dynamic>>>(
+      context.justForm.fields(),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      fieldChange.update(Map.from(context.justForm.fields()));
+    });
+  }
+
+  @override
+  void dispose() {
+    fieldChange.close();
+    super.dispose();
+  }
+
   bool _buildFieldWhen(JustFieldState previous, JustFieldState current) {
-    if (rebuildOnValueChanged && current.value != previous.value) return true;
-    if (rebuildOnErrorChanged && current.error != previous.error) return true;
-    if (rebuildOnAttributeChanged &&
+    if (widget.rebuildOnValueChanged && current.value != previous.value) {
+      return true;
+    }
+    if (widget.rebuildOnErrorChanged && current.error != previous.error) {
+      return true;
+    }
+    if (widget.rebuildOnAttributeChanged &&
         !mapEquals(current.attributes, previous.attributes)) {
       return true;
     }
@@ -247,7 +198,7 @@ class JustBuilder extends StatelessWidget {
   ///
   /// This method:
   /// 1. Listens to the form controller's field data changes
-  /// 2. Filters to only monitored fields (based on [allFields] and [fields])
+  /// 2. Filters to only monitored fields (based on [widget.allFields] and [widget.fields])
   /// 3. Returns empty widget if no fields to monitor
   /// 4. Sets up nested [BlocBuilder]s for each monitored field
   /// 5. Calls the builder with the monitored field controllers
@@ -278,81 +229,57 @@ class JustBuilder extends StatelessWidget {
     return BlocBuilder<JustFormController, Map<String, JustFieldData>>(
       buildWhen: (previous, current) {
         if (current.isEmpty) return false;
-        if (allFields) return true;
+        if (widget.allFields) return true;
 
         return previous.keys
-                .where((element) => fields.contains(element))
+                .where((element) => widget.fields.contains(element))
                 .length !=
-            current.keys.where((element) => fields.contains(element)).length;
+            current.keys
+                .where((element) => widget.fields.contains(element))
+                .length;
       },
       builder: (context, state) {
-        var fieldsMonitor = allFields
-            ? state.keys.toList()
-            : state.keys.where((element) => fields.contains(element)).toList();
+        var fieldsMonitor = widget.allFields
+            ? state.values.toList()
+            : state.keys
+                  .where((element) => widget.fields.contains(element))
+                  .map((e) => state[e])
+                  .whereType<JustFieldData<dynamic>>()
+                  .toList();
 
         if (fieldsMonitor.isEmpty) return const SizedBox.shrink();
-
-        /// Helper function that wraps a widget in a [BlocBuilder] for a specific field.
-        ///
-        /// Creates a [BlocBuilder] that:
-        /// - Listens to the given field's [JustFieldData] bloc
-        /// - Uses [_buildFieldWhen] to determine rebuild conditions
-        /// - Passes the build context to the provided builder function
-        ///
-        /// Parameters:
-        /// - `fieldCubit` - The [JustFieldData] bloc for the field to monitor
-        /// - `builder` - The widget builder function to call when rebuilds occur
-        ///
-        /// Returns:
-        /// - A [BlocBuilder] widget that rebuilds based on field state changes
-        Widget blocWidget(JustFieldData fieldCubit, WidgetBuilder builder) {
-          return BlocBuilder<JustFieldData, JustFieldState>(
-            bloc: fieldCubit,
-            buildWhen: (previous, current) =>
-                _buildFieldWhen(previous, current),
-            builder: (context, state) {
-              return builder.call(context);
-            },
-          );
-        }
-
-        Widget? content;
-        var i = 0;
-
-        /// Build nested [BlocBuilder]s for each monitored field in reverse order.
-        ///
-        /// This creates a chain where:
-        /// - The outermost field's builder wraps the innermost
-        /// - Each field change can trigger a rebuild through the entire chain
-        /// - All monitored fields contribute to the rebuild decision
-        ///
-        /// Example with fields ['a', 'b', 'c']:
-        /// ```
-        /// blocWidget(c, (context) {
-        ///   return blocWidget(b, (context) {
-        ///     return blocWidget(a, (context) {
-        ///       return builder(context, context.justForm.fields());
-        ///     });
-        ///   });
-        /// });
-        /// ```
-        ///
-        /// The reverse order ensures the first field called is the innermost
-        /// and the last field called is the outermost wrapper.
-        for (var field in fieldsMonitor.reversed) {
-          if (i == 0) {
-            content = blocWidget(state[field]!, (context) {
-              return builder(context, context.justForm.fields());
-            });
-          } else {
-            content = blocWidget(state[field]!, (context) {
-              return content!;
-            });
-          }
-          i++;
-        }
-        return content!;
+        return MultiBlocListener(
+          listeners: List.generate(fieldsMonitor.length, (index) {
+            return BlocListener<
+              JustFieldData<dynamic>,
+              JustFieldState<dynamic>
+            >(
+              bloc: fieldsMonitor[index],
+              listenWhen: (previous, current) {
+                return _buildFieldWhen(previous, current);
+              },
+              listener: (context, state) {
+                fieldChange.update(Map.from(context.justForm.fields()));
+              },
+            );
+          }),
+          child:
+              BlocBuilder<
+                AnyCubit<Map<String, JustFieldController<dynamic>>>,
+                Map<String, JustFieldController<dynamic>>
+              >(
+                bloc: fieldChange,
+                builder: (context, state) {
+                  return widget.builder(context, state);
+                },
+              ),
+        );
       },
     );
   }
+}
+
+class AnyCubit<T> extends Cubit<T> {
+  AnyCubit(super.initialState);
+  void update(T value) => emit(value);
 }

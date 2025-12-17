@@ -1,3 +1,6 @@
+## 0.0.4 - Update ReadME
+- Fix Bug on justBuilder with multiple field monitoring
+
 ## 0.0.3 - Update ReadME
 - Add more documentation in readMe
 
