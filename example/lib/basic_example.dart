@@ -60,6 +60,16 @@ class BasicExample extends StatelessWidget {
                           Validatorless.max(20, 'Max lenght 20'),
                         ],
                       ),
+                      JustCheckbox(
+                        name: "cktri",
+                        tristate: true,
+                        initialValue: null,
+                      ),
+                      JustCheckboxListTile(
+                        name: "cktri2",
+                        tristate: true,
+                        initialValue: null,
+                      ),
                       JustTextField(
                         name: "password",
                         initialValue: "password",

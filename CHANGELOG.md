@@ -1,3 +1,6 @@
+## 0.0.6 - Fix Checkbox
+- Fix on JustCheckbox and JustCheckboxListTile cant set null value on tristate true
+
 ## 0.0.5 - Moving To Src
 - Move source to src
 

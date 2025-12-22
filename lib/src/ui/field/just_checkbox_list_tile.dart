@@ -316,7 +316,7 @@ class JustCheckboxListTile extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    return JustField<bool>(
+    return JustField<bool?>(
       name: name,
       initialValue: tristate ? initialValue : initialValue ?? false,
       rebuildOnValueChangedInternally: true,
