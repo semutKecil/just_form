@@ -8,7 +8,7 @@ import 'package:just_form/src/debouncer.dart';
 import 'package:just_form/src/just_field_state.dart';
 import 'package:just_form/src/just_validator.dart';
 part '../just_form_controller.dart';
-part '../just_field.dart';
+part 'just_field.dart';
 part '../just_field_controller.dart';
 part 'field/just_nested_builder.dart';
 part '../just_field_data.dart';
