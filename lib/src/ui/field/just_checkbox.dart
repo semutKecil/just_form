@@ -39,6 +39,10 @@ class JustCheckbox extends StatelessWidget implements JustFieldAbstract<bool> {
   /// is already set on the [JustFormController] or [JustForm].
   @override
   final bool? initialValue;
+  
+  /// The state enabled-disable value change of the field. This value is ignored when the readOnly
+  @override
+  final bool? readOnly;
 
   /// Called when the value of the checkbox should change.
   ///
@@ -249,6 +253,7 @@ class JustCheckbox extends StatelessWidget implements JustFieldAbstract<bool> {
   const JustCheckbox({
     super.key,
     this.initialValue,
+    this.readOnly,
     required this.name,
     this.onChanged,
     this.initialAttributes = const {},
@@ -290,7 +295,9 @@ class JustCheckbox extends StatelessWidget implements JustFieldAbstract<bool> {
               ? state.getValue()
               : state.getValue() ?? false,
           onChanged: (value) {
-            state.setValue(value);
+            if (readOnly != true) {
+              state.setValue(value);
+            }
           },
           tristate: state.getAttribute('tristate') ?? tristate,
           mouseCursor: state.getAttribute('mouseCursor') ?? mouseCursor,
