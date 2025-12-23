@@ -1,3 +1,6 @@
+## 0.0.7 - Add enabled features on Checkbox and Switch
+- Add enable/disable fiture on checkbox and switch
+
 ## 0.0.6 - Fix Checkbox
 - Fix on JustCheckbox and JustCheckboxListTile cant set null value on tristate true
 

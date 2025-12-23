@@ -76,6 +76,8 @@ class JustSwitch extends StatelessWidget implements JustFieldAbstract<bool> {
   @override
   final ValueChanged<bool>? onChanged;
 
+  final bool enabled;
+
   @override
   final bool keepValueOnDestroy;
 
@@ -258,6 +260,7 @@ class JustSwitch extends StatelessWidget implements JustFieldAbstract<bool> {
     this.splashRadius,
     this.focusNode,
     this.onFocusChange,
+    this.enabled = true,
     this.autofocus = false,
     this.padding,
   });
@@ -296,9 +299,11 @@ class JustSwitch extends StatelessWidget implements JustFieldAbstract<bool> {
       builder: (context, state) {
         return Switch(
           value: state.getValue() ?? false,
-          onChanged: (value) {
-            state.setValue(value);
-          },
+          onChanged: (state.getAttribute('enabled') ?? enabled == true)
+              ? (value) {
+                  state.setValue(value);
+                }
+              : null,
           activeThumbColor:
               state.getAttribute('activeThumbColor') ?? activeThumbColor,
           activeTrackColor:

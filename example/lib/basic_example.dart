@@ -64,11 +64,13 @@ class BasicExample extends StatelessWidget {
                         name: "cktri",
                         tristate: true,
                         initialValue: null,
+                        enabled: false,
                       ),
                       JustCheckboxListTile(
                         name: "cktri2",
                         tristate: true,
                         initialValue: null,
+                        enabled: false,
                       ),
                       JustTextField(
                         name: "password",

@@ -76,6 +76,8 @@ class JustCheckbox extends StatelessWidget implements JustFieldAbstract<bool> {
   @override
   final Map<String, dynamic> initialAttributes;
 
+  final bool enabled;
+
   /// {@template flutter.material.checkbox.mouseCursor}
   /// The cursor for a mouse pointer when it enters or is hovering over the
   /// widget.
@@ -266,6 +268,7 @@ class JustCheckbox extends StatelessWidget implements JustFieldAbstract<bool> {
     this.autofocus = false,
     this.shape,
     this.side,
+    this.enabled = true,
     this.isError = false,
     this.semanticLabel,
   });
@@ -289,9 +292,11 @@ class JustCheckbox extends StatelessWidget implements JustFieldAbstract<bool> {
           value: (state.getAttribute('tristate') ?? tristate)
               ? state.getValue()
               : state.getValue() ?? false,
-          onChanged: (value) {
-            state.setValue(value);
-          },
+          onChanged: (state.getAttribute('enabled') ?? enabled == true)
+              ? (value) {
+                  state.setValue(value);
+                }
+              : null,
           tristate: state.getAttribute('tristate') ?? tristate,
           mouseCursor: state.getAttribute('mouseCursor') ?? mouseCursor,
           activeColor: state.getAttribute('activeColor') ?? activeColor,
