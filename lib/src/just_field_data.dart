@@ -34,6 +34,42 @@ class JustFieldData<T> extends Cubit<JustFieldState<T>> {
 
   T? _getValue() => state.value;
 
+  void _setValueAndPatchAttributes(
+    T? value,
+    Map<String, dynamic> attributes, {
+    bool dontTouch = false,
+    bool internal = false,
+  }) {
+    if (state.value == value &&
+        !(value is List || value is Map || value is Iterable || value is Set)) {
+      return;
+    }
+
+    if (!dontTouch && !_touched) {
+      _touch();
+    }
+
+    _update(
+      state.copyWith(
+        value: value,
+        attributes: {...state.attributes, ...attributes},
+        internal: internal,
+      ),
+    );
+
+    if (internal) {
+      _validateWithDebounce().then((value) {
+        _setError(value, internal: true);
+        var error = _formController._xValidate([state.name]);
+        error.forEach((key, value) {
+          _formController
+              ._fieldInternal(key)
+              ?._setErrorInternal(value.value, errorId: value.key);
+        });
+      });
+    }
+  }
+
   void _setValue(T? value, {bool dontTouch = false, bool internal = false}) {
     if (state.value == value &&
         !(value is List || value is Map || value is Iterable || value is Set)) {

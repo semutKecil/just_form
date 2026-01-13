@@ -128,10 +128,7 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
     var value = await valueFuture;
 
     if (value != null) {
-      if (context.mounted) {
-        context.justForm.field(widget.name)?.setAttribute("dataInvalid", false);
-      }
-      state.setValue(value);
+      state.setValueAndPatchAttributes(value, {"dataInvalid": false});
       _controller.text = widget.renderValue(value) ?? "";
     }
   }
@@ -142,6 +139,7 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
       name: widget.name,
       rebuildOnValueChangedInternally: false,
       rebuildOnErrorChanged: true,
+      dontRebuildOnAttributes: ["dataInvalid"],
       validators: widget.validators,
       onChanged: (value, isInternalUpdate) {
         if (isInternalUpdate == false) {
@@ -172,26 +170,20 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
             _invalidValueDebouncer.run(() {
               if (context.mounted) {
                 if (value.isEmpty) {
-                  state.setValue(null);
-                  context.justForm
-                      .field(widget.name)
-                      ?.setAttribute("dataInvalid", false);
+                  print("empty");
+                  state.setValueAndPatchAttributes(null, {
+                    "dataInvalid": false,
+                  });
                   return;
                 }
-                var data = widget.parseValue(
-                  value,
-                ); // formatter.tryParseStrict(value);
+                var data = widget.parseValue(value);
                 if (data == null) {
-                  state.setValue(null);
-                  context.justForm
-                      .field(widget.name)
-                      ?.setAttribute("dataInvalid", true);
+                  print("invalid");
+                  state.setValueAndPatchAttributes(null, {"dataInvalid": true});
                   return;
                 }
-                context.justForm
-                    .field(widget.name)
-                    ?.setAttribute("dataInvalid", false);
-                state.setValue(data);
+                print("valid");
+                state.setValueAndPatchAttributes(data, {"dataInvalid": false});
               }
             });
           },

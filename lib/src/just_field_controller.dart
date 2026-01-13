@@ -16,6 +16,10 @@ class JustFieldController<T> {
     _cubit._setValue(value, internal: internal, dontTouch: false);
   }
 
+  void setValueAndPatchAttributes(T? value, Map<String, dynamic> attributes) {
+    _cubit._setValueAndPatchAttributes(value, attributes, internal: internal);
+  }
+
   String? getError() => _cubit._getError();
 
   void setError(String? error) {

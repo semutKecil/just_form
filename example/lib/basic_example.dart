@@ -153,6 +153,9 @@ class BasicExample extends StatelessWidget {
                         // freeText: false,
                         dateFormatText: "yyyy-MM-dd",
                         decoration: InputDecoration(labelText: "Birth Date"),
+                        validators: [
+                          (value) => value == null ? "Field is required" : null,
+                        ],
                       ),
                       JustTimeField(
                         name: "time",
