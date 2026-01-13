@@ -129,9 +129,7 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
 
     if (value != null) {
       if (context.mounted) {
-        context.justForm
-            .field(widget.name)
-            ?.setAttribute("valueInvalid", false);
+        context.justForm.field(widget.name)?.setAttribute("dataInvalid", false);
       }
       state.setValue(value);
       _controller.text = widget.renderValue(value) ?? "";
