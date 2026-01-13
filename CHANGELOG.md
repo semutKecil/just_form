@@ -1,3 +1,13 @@
+## 0.1.1 - Improved Documentation & Descriptions
+
+### Documentation
+- 📚 Enhanced package description to highlight key features
+- 📚 Added "Why Just Form?" section with user-friendly benefits
+- 📚 Updated pubspec.yaml description for better package discovery
+- 📚 Improved README with feature highlights and use cases
+
+---
+
 ## 0.1.0 - Documentation & Picker Field Fixes
 
 ### Features
