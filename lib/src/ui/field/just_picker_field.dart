@@ -170,7 +170,6 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
             _invalidValueDebouncer.run(() {
               if (context.mounted) {
                 if (value.isEmpty) {
-                  print("empty");
                   state.setValueAndPatchAttributes(null, {
                     "dataInvalid": false,
                   });
@@ -178,11 +177,9 @@ class _JustPickerFieldState<T> extends State<JustPickerField<T>> {
                 }
                 var data = widget.parseValue(value);
                 if (data == null) {
-                  print("invalid");
                   state.setValueAndPatchAttributes(null, {"dataInvalid": true});
                   return;
                 }
-                print("valid");
                 state.setValueAndPatchAttributes(data, {"dataInvalid": false});
               }
             });

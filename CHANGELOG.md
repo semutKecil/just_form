@@ -1,3 +1,27 @@
+## 0.1.0 - Documentation & Picker Field Fixes
+
+### Features
+- ✨ Comprehensive README documentation with basic usage examples
+- ✨ Detailed validation guide covering field-level, form-level, and custom/async validation
+- ✨ Initial values priority system documentation
+
+### Fixes
+- 🐛 Fix issues on picker fields (JustDateField & JustTimeField)
+- 🐛 Improve picker field behavior and state management
+
+### Documentation
+- 📚 Added Basic Usage section with step-by-step examples
+- 📚 Added Validation section explaining three types of validation
+- 📚 Added Initial Values section with priority hierarchy explanation
+- 📚 Improved code examples and practical use cases
+
+### Enhancements
+- 💡 Clarified controller, form, and field-level initialValues behavior
+- 💡 Documented setError() function for custom and async validation
+- 💡 Added examples for form submission and error handling
+
+---
+
 ## 0.0.7 - Add enabled features on Checkbox and Switch
 - Add enable/disable fiture on checkbox and switch
 
