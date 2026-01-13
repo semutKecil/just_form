@@ -19,13 +19,12 @@ A powerful and flexible Flutter form management package that saves you hours of 
 - 💾 **Smart state management** – Store custom data on fields, react to any change
 - ⚡ **High performance** – Only rebuild what changed, skip unnecessary updates
 
-## Table of Contents
+<details>
+<summary><b>Table of Contents</b></summary>
 
 - [Just Form](#just-form)
   - [Why Just Form?](#why-just-form)
-  - [Table of Contents](#table-of-contents)
   - [ScreenShots](#screenshots)
-  - [Features](#features)
   - [Basic Usage](#basic-usage)
     - [1. Wrap your form with JustFormBuilder](#1-wrap-your-form-with-justformbuilder)
     - [2. Add form fields](#2-add-form-fields)
@@ -104,24 +103,12 @@ A powerful and flexible Flutter form management package that saves you hours of 
       - [4. **Value Persistence**](#4-value-persistence)
       - [5. **Field Attributes for Custom State**](#5-field-attributes-for-custom-state)
 
+</details>
+
 ---
 
 ## ScreenShots
 
-| Basic Usage | Todo |
-|----------|-----|
-| ![Fix Height](screenshots/basic-example.gif) | ![Fix Height](screenshots/todo-example.gif) |
-
----
-
-## Features
-
-- ✅ Automatic field registration and management
-- ✅ Field-level, form-level, and async validation
-- ✅ 3-tier initial values priority system
-- ✅ Easy value access with `getValues()`
-- ✅ Form and field state management with controllers
-- ✅ Reactive UI with JustBuilder (no setState needed)
 | Basic Usage | Todo |
 |----------|-----|
 | ![Fix Height](screenshots/basic-example.gif) | ![Fix Height](screenshots/todo-example.gif) |
