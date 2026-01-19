@@ -1,3 +1,6 @@
+## 0.1.2 - Remove Freezed package
+- remove freezed package. change all freezed annotation with generic dart class
+
 ## 0.1.1 - Improved Documentation & Descriptions
 
 ### Documentation
