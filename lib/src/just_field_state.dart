@@ -1,15 +1,39 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-part 'just_field_state.freezed.dart';
+class JustFieldState<T> {
+  final String name;
+  final bool internal;
+  final DateTime updateTime;
+  final T? value;
+  final String? error;
+  final bool active;
+  final Map<String, dynamic> attributes;
 
-@freezed
-abstract class JustFieldState<T> with _$JustFieldState<T> {
-  const factory JustFieldState({
-    required String name,
-    required bool internal,
-    required DateTime updateTime,
+  const JustFieldState({
+    required this.name,
+    required this.internal,
+    required this.updateTime,
+    this.value,
+    this.error,
+    this.active = true,
+    this.attributes = const {},
+  });
+
+  JustFieldState<T> copyWith({
+    String? name,
+    bool? internal,
+    DateTime? updateTime,
     T? value,
     String? error,
-    @Default(true) bool active,
-    @Default({}) Map<String, dynamic> attributes,
-  }) = _JustFieldState<T>;
+    bool? active,
+    Map<String, dynamic>? attributes,
+  }) {
+    return JustFieldState<T>(
+      name: name ?? this.name,
+      internal: internal ?? this.internal,
+      updateTime: updateTime ?? this.updateTime,
+      value: value ?? this.value,
+      error: error ?? this.error,
+      active: active ?? this.active,
+      attributes: attributes ?? this.attributes,
+    );
+  }
 }
