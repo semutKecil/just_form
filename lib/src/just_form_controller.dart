@@ -82,12 +82,13 @@ class JustFormController extends Cubit<Map<String, JustFieldData>> {
       });
     } else {
       ctrl._update(
-        ctrl.state.copyWith(
-          attributes: initialAttributes,
-          value: value,
-          internal: true,
-          active: true,
-        ),
+        ctrl.state
+            .copyWith(
+              attributes: initialAttributes,
+              internal: true,
+              active: true,
+            )
+            .updateValue(value: value),
       );
     }
 

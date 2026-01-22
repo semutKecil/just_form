@@ -50,11 +50,12 @@ class JustFieldData<T> extends Cubit<JustFieldState<T>> {
     }
 
     _update(
-      state.copyWith(
-        value: value,
-        attributes: {...state.attributes, ...attributes},
-        internal: internal,
-      ),
+      state
+          .updateValue(value: value)
+          .copyWith(
+            attributes: {...state.attributes, ...attributes},
+            internal: internal,
+          ),
     );
 
     if (internal) {
@@ -79,7 +80,7 @@ class JustFieldData<T> extends Cubit<JustFieldState<T>> {
     if (!dontTouch && !_touched) {
       _touch();
     }
-    _update(state.copyWith(value: value, internal: internal));
+    _update(state.updateValue(value: value).copyWith(internal: internal));
 
     if (internal) {
       _validateWithDebounce().then((value) {

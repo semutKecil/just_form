@@ -1,3 +1,6 @@
+## 0.1.4 - Fix value cant be null
+- Fix value cant be null
+
 ## 0.1.3 - Fix Validation cant be null
 - Fix Validation cant be null
 
