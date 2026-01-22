@@ -30,6 +30,7 @@ class JustFieldState<T> {
       internal: internal ?? this.internal,
       updateTime: updateTime ?? this.updateTime,
       error: error,
+      value: value,
       active: active ?? this.active,
       attributes: attributes ?? this.attributes,
     );

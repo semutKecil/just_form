@@ -1,3 +1,6 @@
+## 0.1.5 - Fix: set value data
+- Fix: set value data
+
 ## 0.1.4 - Fix value cant be null
 - Fix value cant be null
 
