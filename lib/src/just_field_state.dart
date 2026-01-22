@@ -22,7 +22,7 @@ class JustFieldState<T> {
     bool? internal,
     DateTime? updateTime,
     T? value,
-    String? error,
+    // String? error,
     bool? active,
     Map<String, dynamic>? attributes,
   }) {
@@ -31,9 +31,21 @@ class JustFieldState<T> {
       internal: internal ?? this.internal,
       updateTime: updateTime ?? this.updateTime,
       value: value ?? this.value,
-      error: error ?? this.error,
+      error: error,
       active: active ?? this.active,
       attributes: attributes ?? this.attributes,
+    );
+  }
+
+  JustFieldState<T> updateError({String? error}) {
+    return JustFieldState<T>(
+      name: name,
+      internal: internal,
+      updateTime: updateTime,
+      value: value,
+      error: error,
+      active: active,
+      attributes: attributes,
     );
   }
 }

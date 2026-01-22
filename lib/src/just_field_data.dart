@@ -113,7 +113,7 @@ class JustFieldData<T> extends Cubit<JustFieldState<T>> {
     }
 
     _errorId = errorId;
-    _update(state.copyWith(error: error, internal: internal));
+    _update(state.updateError(error: error).copyWith(internal: internal));
   }
 
   Map<String, dynamic> _getAttributes() => state.attributes;
