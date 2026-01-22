@@ -1,37 +1,40 @@
+## 0.1.3 - Fix Validation cant be null
+- Fix Validation cant be null
+
 ## 0.1.2 - Remove Freezed package
 - remove freezed package. change all freezed annotation with generic dart class
 
 ## 0.1.1 - Improved Documentation & Descriptions
 
 ### Documentation
-- 📚 Enhanced package description to highlight key features
-- 📚 Added "Why Just Form?" section with user-friendly benefits
-- 📚 Updated pubspec.yaml description for better package discovery
-- 📚 Improved README with feature highlights and use cases
+- Enhanced package description to highlight key features
+- Added "Why Just Form?" section with user-friendly benefits
+- Updated pubspec.yaml description for better package discovery
+- Improved README with feature highlights and use cases
 
 ---
 
 ## 0.1.0 - Documentation & Picker Field Fixes
 
 ### Features
-- ✨ Comprehensive README documentation with basic usage examples
-- ✨ Detailed validation guide covering field-level, form-level, and custom/async validation
-- ✨ Initial values priority system documentation
+- Comprehensive README documentation with basic usage examples
+- Detailed validation guide covering field-level, form-level, and custom/async validation
+- Initial values priority system documentation
 
 ### Fixes
-- 🐛 Fix issues on picker fields (JustDateField & JustTimeField)
-- 🐛 Improve picker field behavior and state management
+- Fix issues on picker fields (JustDateField & JustTimeField)
+- Improve picker field behavior and state management
 
 ### Documentation
-- 📚 Added Basic Usage section with step-by-step examples
-- 📚 Added Validation section explaining three types of validation
-- 📚 Added Initial Values section with priority hierarchy explanation
-- 📚 Improved code examples and practical use cases
+- Added Basic Usage section with step-by-step examples
+- Added Validation section explaining three types of validation
+- Added Initial Values section with priority hierarchy explanation
+- Improved code examples and practical use cases
 
 ### Enhancements
-- 💡 Clarified controller, form, and field-level initialValues behavior
-- 💡 Documented setError() function for custom and async validation
-- 💡 Added examples for form submission and error handling
+- Clarified controller, form, and field-level initialValues behavior
+- Documented setError() function for custom and async validation
+- Added examples for form submission and error handling
 
 ---
 
@@ -62,16 +65,16 @@
 ## 0.0.1 - Initial Release
 
 ### Features
-- ✨ **Automatic Field Registration** - Fields automatically register and unregister with the form controller
-- ✨ **Generic Type Support** - Full generic type support for any value type (String, int, DateTime, custom types, etc.)
-- ✨ **Form-Level Validation** - Cross-field validation with `JustValidator` and `JustTargetError`
-- ✨ **Field-Level Validation** - Support for any `FormFieldValidator<T>` from Flutter
-- ✨ **Real-Time State Tracking** - Automatic tracking of field values, errors, and custom attributes
-- ✨ **BLoC-Powered State Management** - Uses Flutter BLoC pattern for predictable state management
-- ✨ **Selective Rebuilds** - Control rebuild triggers at both field and form level (value, error, attributes)
-- ✨ **Field Attributes** - Store and manipulate custom metadata alongside field values
-- ✨ **External Controller Support** - Use external controller for form management or let the widget create one
-- ✨ **Callback System** - Callbacks for field registration, value changes, error changes, and attribute updates
+- **Automatic Field Registration** - Fields automatically register and unregister with the form controller
+- **Generic Type Support** - Full generic type support for any value type (String, int, DateTime, custom types, etc.)
+- **Form-Level Validation** - Cross-field validation with `JustValidator` and `JustTargetError`
+- **Field-Level Validation** - Support for any `FormFieldValidator<T>` from Flutter
+- **Real-Time State Tracking** - Automatic tracking of field values, errors, and custom attributes
+- **BLoC-Powered State Management** - Uses Flutter BLoC pattern for predictable state management
+- **Selective Rebuilds** - Control rebuild triggers at both field and form level (value, error, attributes)
+- **Field Attributes** - Store and manipulate custom metadata alongside field values
+- **External Controller Support** - Use external controller for form management or let the widget create one
+- **Callback System** - Callbacks for field registration, value changes, error changes, and attribute updates
 
 ### Built-In Field Widgets
 - `JustTextField` - Text input field with validation display
