@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:just_form/src/ui/just_form_builder.dart';
 
 /// This class, `JustSwitchListTile`, is a stateless widget in Flutter that provides a switch list tile for a form. Here's a summary of what each method does:

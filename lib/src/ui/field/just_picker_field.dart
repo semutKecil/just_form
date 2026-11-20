@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:just_form/src/debouncer.dart';
 import 'package:just_form/src/ui/just_form_builder.dart';
 

@@ -1,3 +1,6 @@
+## 0.2.5 - Fix: set value data
+- Fix: update to flutter 3.50.x
+
 ## 0.1.5 - Fix: set value data
 - Fix: set value data
 

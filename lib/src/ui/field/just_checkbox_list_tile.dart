@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:just_form/src/ui/just_form_builder.dart';
 
 /// The `JustCheckboxListTile` class is a stateless widget in Flutter that provides a checkbox list tile for a form. Here's a summary of what each method does:

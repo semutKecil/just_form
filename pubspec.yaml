@@ -1,6 +1,6 @@
 name: just_form
 description: "Complete Flutter form management with validation, reactive UIs, and pre-built form fields."
-version: 0.1.5
+version: 0.2.5
 homepage: https://github.com/semutKecil/just_form
 
 environment:
@@ -11,12 +11,13 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
-  intl: ^0.20.2  
+  intl: ^0.20.2
 
+  material_ui: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
